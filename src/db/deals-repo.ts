@@ -3,7 +3,7 @@
  * snapshot, so historical deals never change when defaults/engine change later.
  */
 import { computeBrrrr, evaluateBuyBox, type Verdict } from "@/calc/brrrr";
-import { type BrrrrInputs, type BrrrrResult, type BuyBox, DEFAULT_BUY_BOX } from "@/calc/types";
+import { type BrrrrInputs, type BrrrrResult, type BuyBox, DEFAULT_BUY_BOX, WORKED_EXAMPLE } from "@/calc/types";
 import type { DealStatus } from "@/data/sample";
 
 import { getDb } from "./database";
@@ -113,4 +113,20 @@ export async function countDeals(): Promise<number> {
   const db = await getDb();
   const row = await db.getFirstAsync<{ n: number }>("SELECT COUNT(*) as n FROM deals");
   return row?.n ?? 0;
+}
+
+/** Demo fixtures — input variants tuned to compute to varied verdicts. */
+const SEED: { address: string; leadId: string; status: DealStatus; overrides: Partial<BrrrrInputs> }[] = [
+  { address: "1428 ELM AVE", leadId: "TGT-0147", status: "PURSUING", overrides: {} },
+  { address: "902 N 14TH ST", leadId: "TGT-0148", status: "PURSUING", overrides: { arv: 230_000, grossMonthlyRent: 2_400 } },
+  { address: "3315 PROSPECT AVE", leadId: "TGT-0149", status: "DEAD", overrides: { grossMonthlyRent: 1_400 } },
+  { address: "711 BENTON BLVD", leadId: "TGT-0150", status: "ANALYZING", overrides: { purchasePrice: 100_000, grossMonthlyRent: 2_000 } },
+];
+
+/** Populate a few demo deals on first launch so the dossier isn't empty. */
+export async function seedIfEmpty(): Promise<void> {
+  if ((await countDeals()) > 0) return;
+  for (const s of SEED) {
+    await saveDeal({ address: s.address, leadId: s.leadId, inputs: { ...WORKED_EXAMPLE, ...s.overrides }, status: s.status });
+  }
 }
