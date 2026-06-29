@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { ScrollView, View } from "react-native";
 
 import { computeBrrrr, evaluateBuyBox, type MetricStatus } from "@/calc/brrrr";
-import { DEFAULT_BUY_BOX, WORKED_EXAMPLE } from "@/calc/types";
+import { DEFAULT_BUY_BOX } from "@/calc/types";
 import {
   ActionBar,
   BackButton,
@@ -18,10 +18,10 @@ import {
   Ui,
 } from "@/components/tactical";
 import { Tactical, hairline } from "@/constants/theme";
+import { saveDeal } from "@/db/deals-repo";
 import { formatPercent, formatUSD } from "@/lib/format";
 import { verdictColor, verdictGlyph } from "@/lib/tactical";
-
-const inp = WORKED_EXAMPLE;
+import { useDealStore } from "@/store/deal";
 
 const SUBTITLE: Record<string, string> = {
   GO: "CLEAR TO ENGAGE",
@@ -31,6 +31,9 @@ const SUBTITLE: Record<string, string> = {
 
 export default function AnalysisScreen() {
   const router = useRouter();
+  const inp = useDealStore((s) => s.inputs);
+  const address = useDealStore((s) => s.address);
+  const leadId = useDealStore((s) => s.leadId);
   const r = computeBrrrr(inp);
   const ev = evaluateBuyBox(r, DEFAULT_BUY_BOX);
   const vc = verdictColor(ev.verdict);
@@ -58,7 +61,7 @@ export default function AnalysisScreen() {
           titleSize={17}
           titleSpacing={2}
           left={<BackButton onPress={() => router.back()} />}
-          sub="1428 ELM AVE · BRRRR"
+          sub={`${address} · BRRRR`}
         />
       </TopBar>
 
@@ -138,7 +141,14 @@ export default function AnalysisScreen() {
       </ScrollView>
 
       <ActionBar>
-        <ChamferButton label="SAVE TO DOSSIER" onPress={() => router.replace("/dossier")} full />
+        <ChamferButton
+          label="SAVE TO DOSSIER"
+          onPress={async () => {
+            await saveDeal({ address, leadId, inputs: inp, status: "PURSUING" });
+            router.replace("/dossier");
+          }}
+          full
+        />
         <IconButton onPress={() => {}} size={48}>
           <Ui size={15} color={Tactical.text.secondary}>
             ⤴
