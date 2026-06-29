@@ -1,8 +1,9 @@
 import { useRouter } from "expo-router";
-import { ScrollView, View } from "react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
 
 import { computeBrrrr, evaluateBuyBox } from "@/calc/brrrr";
-import { DEFAULT_BUY_BOX } from "@/calc/types";
+import { type BrrrrInputs, DEFAULT_BUY_BOX } from "@/calc/types";
 import {
   ChamferButton,
   CornerBrackets,
@@ -15,28 +16,55 @@ import {
   TopBar,
   Ui,
 } from "@/components/tactical";
-import { Tactical, hairline } from "@/constants/theme";
+import { Tactical, TacticalFonts, hairline } from "@/constants/theme";
 import { formatPercent, formatUSD } from "@/lib/format";
 import { verdictColor } from "@/lib/tactical";
 import { useDealStore } from "@/store/deal";
 
 const GREEN = Tactical.green.primary;
 
+type Kind = "money" | "percent" | "ratio" | "months";
+
+/** Field-bound input cell: tap the value to type, or use the steppers. */
 function InputCell({
+  field,
   label,
-  value,
+  step,
+  kind,
+  decimals = 1,
   mode,
   emphasize,
-  onDec,
-  onInc,
 }: {
+  field: keyof BrrrrInputs;
   label: string;
-  value: string;
+  step: number;
+  kind: Kind;
+  decimals?: number;
   mode?: "$" | "%";
   emphasize?: boolean;
-  onDec: () => void;
-  onInc: () => void;
 }) {
+  const value = useDealStore((s) => s.inputs[field]);
+  const setInput = useDealStore((s) => s.setInput);
+  const bump = useDealStore((s) => s.bump);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const display =
+    kind === "money" ? formatUSD(value) : kind === "percent" ? formatPercent(value, decimals) : kind === "ratio" ? value.toFixed(2) : `${value}`;
+
+  const startEdit = () => {
+    setDraft(kind === "percent" ? String(+(value * 100).toFixed(2)) : kind === "money" ? String(Math.round(value)) : String(value));
+    setEditing(true);
+  };
+  const commit = () => {
+    const n = parseFloat(draft);
+    if (!Number.isNaN(n)) {
+      const v = kind === "percent" ? n / 100 : kind === "months" ? Math.max(0, Math.round(n)) : Math.max(0, n);
+      setInput(field, v);
+    }
+    setEditing(false);
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: Tactical.bg.panel2, borderWidth: 1, borderColor: hairline(0.1), padding: 9, gap: 7 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -52,10 +80,25 @@ function InputCell({
         ) : null}
       </View>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Mono size={13} weight="med" color={emphasize ? GREEN : Tactical.text.heading}>
-          {value}
-        </Mono>
-        <Stepper onDec={onDec} onInc={onInc} />
+        {editing ? (
+          <TextInput
+            value={draft}
+            onChangeText={setDraft}
+            onBlur={commit}
+            onSubmitEditing={commit}
+            autoFocus
+            keyboardType={kind === "months" ? "number-pad" : "decimal-pad"}
+            selectionColor={GREEN}
+            style={{ flex: 1, fontFamily: TacticalFonts.monoMed, fontSize: 13, color: GREEN, padding: 0 }}
+          />
+        ) : (
+          <Pressable onPress={startEdit} hitSlop={6} style={{ flex: 1 }}>
+            <Mono size={13} weight="med" color={emphasize ? GREEN : Tactical.text.heading}>
+              {display}
+            </Mono>
+          </Pressable>
+        )}
+        <Stepper onDec={() => bump(field, -step)} onInc={() => bump(field, step)} />
       </View>
     </View>
   );
@@ -101,7 +144,6 @@ function Callout({ children, danger }: { children: React.ReactNode; danger?: boo
 export default function UnderwriteScreen() {
   const router = useRouter();
   const inp = useDealStore((s) => s.inputs);
-  const bump = useDealStore((s) => s.bump);
   const reset = useDealStore((s) => s.reset);
 
   const r = computeBrrrr(inp);
@@ -160,32 +202,33 @@ export default function UnderwriteScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 14, gap: 16 }} showsVerticalScrollIndicator={false}>
-        {/* A · ACQUISITION */}
+      <ScrollView contentContainerStyle={{ padding: 14, gap: 16 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Module label="A · ACQUISITION">
           <Row>
-            <InputCell label="PURCHASE" value={formatUSD(inp.purchasePrice)} onDec={() => bump("purchasePrice", -5000)} onInc={() => bump("purchasePrice", 5000)} />
-            <InputCell label="REHAB" value={formatUSD(inp.rehabBudget)} onDec={() => bump("rehabBudget", -5000)} onInc={() => bump("rehabBudget", 5000)} />
+            <InputCell field="purchasePrice" label="PURCHASE" step={5000} kind="money" />
+            <InputCell field="rehabBudget" label="REHAB" step={5000} kind="money" />
           </Row>
           <Row>
-            <InputCell label="BUY CLOSING" mode="$" value={formatUSD(inp.buyClosingCosts)} onDec={() => bump("buyClosingCosts", -500)} onInc={() => bump("buyClosingCosts", 500)} />
-            <InputCell label="HOLD MONTHS" value={`${inp.holdingMonths}`} onDec={() => bump("holdingMonths", -1)} onInc={() => bump("holdingMonths", 1)} />
+            <InputCell field="buyClosingCosts" label="BUY CLOSING" step={500} kind="money" mode="$" />
+            <InputCell field="holdingMonths" label="HOLD MONTHS" step={1} kind="months" />
           </Row>
           <Row>
-            <InputCell label="CARRY/MO" value={formatUSD(inp.monthlyHoldingCost)} onDec={() => bump("monthlyHoldingCost", -250)} onInc={() => bump("monthlyHoldingCost", 250)} />
-            <InputCell label="ACQ LOAN" value={formatUSD(inp.acqLoanAmount)} onDec={() => bump("acqLoanAmount", -2000)} onInc={() => bump("acqLoanAmount", 2000)} />
+            <InputCell field="monthlyHoldingCost" label="CARRY/MO" step={250} kind="money" />
+            <InputCell field="acqLoanAmount" label="ACQ LOAN" step={2000} kind="money" />
           </Row>
         </Module>
 
-        {/* B · ARV */}
         <Module label="B · AFTER-REPAIR VALUE">
           <Row>
-            <InputCell label="ARV" emphasize value={formatUSD(inp.arv)} onDec={() => bump("arv", -5000)} onInc={() => bump("arv", 5000)} />
-            <InputCell label="70% RULE" value={inp.seventyRulePct.toFixed(2)} onDec={() => bump("seventyRulePct", -0.05)} onInc={() => bump("seventyRulePct", 0.05)} />
+            <InputCell field="arv" label="ARV" step={5000} kind="money" emphasize />
+            <InputCell field="seventyRulePct" label="70% RULE" step={0.05} kind="ratio" />
           </Row>
           <Callout danger={purchaseOver > 0}>
             <Mono size={10} color={Tactical.text.secondary}>
-              MAO = <Mono size={10} weight="bold" color={Tactical.text.heading}>{formatUSD(r.mao)}</Mono>
+              MAO ={" "}
+              <Mono size={10} weight="bold" color={Tactical.text.heading}>
+                {formatUSD(r.mao)}
+              </Mono>
             </Mono>
             {purchaseOver > 0 ? (
               <Mono size={10} weight="bold" color={Tactical.status.red}>
@@ -195,15 +238,17 @@ export default function UnderwriteScreen() {
           </Callout>
         </Module>
 
-        {/* C · REFINANCE */}
         <Module label="C · REFINANCE">
           <Row>
-            <InputCell label="REFI LTV" mode="%" value={formatPercent(inp.refiLtv, 0)} onDec={() => bump("refiLtv", -0.05)} onInc={() => bump("refiLtv", 0.05)} />
-            <InputCell label="REFI RATE" value={formatPercent(inp.refiRate, 1)} onDec={() => bump("refiRate", -0.0025)} onInc={() => bump("refiRate", 0.0025)} />
+            <InputCell field="refiLtv" label="REFI LTV" step={0.05} kind="percent" decimals={0} mode="%" />
+            <InputCell field="refiRate" label="REFI RATE" step={0.0025} kind="percent" decimals={1} />
           </Row>
           <Callout>
             <Mono size={10} color={Tactical.text.secondary}>
-              NEW LOAN <Mono size={10} weight="bold" color={Tactical.text.heading}>{formatUSD(r.newLoanAmount)}</Mono>
+              NEW LOAN{" "}
+              <Mono size={10} weight="bold" color={Tactical.text.heading}>
+                {formatUSD(r.newLoanAmount)}
+              </Mono>
             </Mono>
             <Mono size={10} color={Tactical.text.muted}>
               · PMT {formatUSD(Math.round(r.newMortgageMonthly))}/MO · {inp.refiTermYears}YR
@@ -211,16 +256,19 @@ export default function UnderwriteScreen() {
           </Callout>
         </Module>
 
-        {/* D · RENTAL OPS (collapsed) */}
         <Module label="D · RENTAL OPS">
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: Tactical.bg.panel2, borderWidth: 1, borderColor: hairline(0.1), paddingHorizontal: 12, paddingVertical: 11 }}>
-            <Mono size={11} color={Tactical.text.secondary}>
-              RENT {formatUSD(inp.grossMonthlyRent)} · VAC {formatPercent(inp.vacancyPct, 0)}
-            </Mono>
-            <Ui size={11} weight="bold" color={Tactical.text.muted}>
-              ▾
-            </Ui>
-          </View>
+          <Row>
+            <InputCell field="grossMonthlyRent" label="RENT/MO" step={50} kind="money" />
+            <InputCell field="vacancyPct" label="VACANCY" step={0.01} kind="percent" decimals={0} mode="%" />
+          </Row>
+          <Row>
+            <InputCell field="managementPct" label="MGMT" step={0.01} kind="percent" decimals={0} mode="%" />
+            <InputCell field="maintenancePct" label="MAINT" step={0.01} kind="percent" decimals={0} mode="%" />
+          </Row>
+          <Row>
+            <InputCell field="capexReservePct" label="CAPEX" step={0.01} kind="percent" decimals={0} mode="%" />
+            <InputCell field="propertyTaxesMonthly" label="TAXES/MO" step={25} kind="money" />
+          </Row>
         </Module>
 
         <ChamferButton label="RUN ANALYSIS ▸ VERDICT" onPress={() => router.push("/analysis/TGT-0147")} />
