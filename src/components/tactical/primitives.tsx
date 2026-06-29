@@ -4,7 +4,7 @@
  * is drawn with react-native-svg since CSS clip-path has no RN equivalent.
  */
 import { type ReactNode, useState } from "react";
-import { type LayoutChangeEvent, Pressable, StyleSheet, View, type ViewStyle } from "react-native";
+import { type LayoutChangeEvent, Pressable, StyleSheet, type TextStyle, View, type ViewStyle } from "react-native";
 import Svg, { Polygon } from "react-native-svg";
 
 import { Tactical, hairline } from "@/constants/theme";
@@ -148,7 +148,7 @@ export function SectionLabel({
 }: {
   children: ReactNode;
   color?: string;
-  style?: ViewStyle;
+  style?: TextStyle;
 }) {
   return (
     <Ui size={10} weight="semi" spacing={2} color={color} style={style}>
