@@ -2,7 +2,6 @@ import { useRouter } from "expo-router";
 import { ScrollView, View } from "react-native";
 
 import { computeBrrrr, evaluateBuyBox, type MetricStatus } from "@/calc/brrrr";
-import { DEFAULT_BUY_BOX } from "@/calc/types";
 import {
   ActionBar,
   BackButton,
@@ -22,6 +21,7 @@ import { saveDeal } from "@/db/deals-repo";
 import { formatPercent, formatUSD } from "@/lib/format";
 import { verdictColor, verdictGlyph } from "@/lib/tactical";
 import { useDealStore } from "@/store/deal";
+import { useSettingsStore } from "@/store/settings";
 
 const SUBTITLE: Record<string, string> = {
   GO: "CLEAR TO ENGAGE",
@@ -34,18 +34,19 @@ export default function AnalysisScreen() {
   const inp = useDealStore((s) => s.inputs);
   const address = useDealStore((s) => s.address);
   const leadId = useDealStore((s) => s.leadId);
+  const buyBox = useSettingsStore((s) => s.buyBox);
   const r = computeBrrrr(inp);
-  const ev = evaluateBuyBox(r, DEFAULT_BUY_BOX);
+  const ev = evaluateBuyBox(r, buyBox);
   const vc = verdictColor(ev.verdict);
   const isAmber = ev.verdict === "MARGINAL";
-  const over = r.cashLeftInDeal - DEFAULT_BUY_BOX.maxCashLeftIn;
-  const barFill = r.cashLeftInDeal > 0 ? Math.min(1, DEFAULT_BUY_BOX.maxCashLeftIn / r.cashLeftInDeal) : 1;
+  const over = r.cashLeftInDeal - buyBox.maxCashLeftIn;
+  const barFill = r.cashLeftInDeal > 0 ? Math.min(1, buyBox.maxCashLeftIn / r.cashLeftInDeal) : 1;
   const purchaseOver = inp.purchasePrice - r.mao;
 
   const tiles: { label: string; value: string; benchmark: string; status: MetricStatus }[] = [
     { label: "ALL-IN COST", value: formatUSD(r.allInCost), benchmark: "TGT ≤ $150K", status: r.allInCost > inp.arv * 0.75 ? "fail" : "pass" },
     { label: "EQUITY CAPTURED", value: formatUSD(r.equityCaptured), benchmark: "TGT ≥ $25K", status: r.equityCaptured >= 25000 ? "pass" : "watch" },
-    { label: "CASH FLOW/MO", value: formatUSD(Math.round(r.cashFlowMonthly)), benchmark: `TGT ≥ ${formatUSD(DEFAULT_BUY_BOX.minMonthlyCashFlow)}`, status: ev.cashFlow },
+    { label: "CASH FLOW/MO", value: formatUSD(Math.round(r.cashFlowMonthly)), benchmark: `TGT ≥ ${formatUSD(buyBox.minMonthlyCashFlow)}`, status: ev.cashFlow },
     { label: "CASH-ON-CASH", value: r.cashOnCash === null ? "♾" : formatPercent(r.cashOnCash), benchmark: "TGT ≥ 8%", status: ev.cashOnCash },
     { label: "CAP RATE", value: formatPercent(r.capRate), benchmark: "TGT ≥ 6%", status: ev.capRate },
     { label: "DSCR", value: r.dscr.toFixed(2), benchmark: "TGT ≥ 1.20", status: ev.dscr },
@@ -97,7 +98,7 @@ export default function AnalysisScreen() {
               {r.isFullyRecycled ? "♾" : formatUSD(r.cashLeftInDeal)}
             </Mono>
             <Mono size={9} color={Tactical.text.muted}>
-              TGT ≤ {formatUSD(DEFAULT_BUY_BOX.maxCashLeftIn)}
+              TGT ≤ {formatUSD(buyBox.maxCashLeftIn)}
               {over > 0 ? ` · +${formatUSD(over)} OVER` : ""}
             </Mono>
           </View>
@@ -144,7 +145,7 @@ export default function AnalysisScreen() {
         <ChamferButton
           label="SAVE TO DOSSIER"
           onPress={async () => {
-            await saveDeal({ address, leadId, inputs: inp, status: "PURSUING" });
+            await saveDeal({ address, leadId, inputs: inp, status: "PURSUING", buyBox });
             router.replace("/dossier");
           }}
           full

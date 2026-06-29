@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
 
 import { computeBrrrr, evaluateBuyBox } from "@/calc/brrrr";
-import { type BrrrrInputs, DEFAULT_BUY_BOX } from "@/calc/types";
+import { type BrrrrInputs } from "@/calc/types";
 import {
   ChamferButton,
   CornerBrackets,
@@ -20,6 +20,7 @@ import { Tactical, TacticalFonts, hairline } from "@/constants/theme";
 import { formatPercent, formatUSD } from "@/lib/format";
 import { verdictColor } from "@/lib/tactical";
 import { useDealStore } from "@/store/deal";
+import { useSettingsStore } from "@/store/settings";
 
 const GREEN = Tactical.green.primary;
 
@@ -145,9 +146,10 @@ export default function UnderwriteScreen() {
   const router = useRouter();
   const inp = useDealStore((s) => s.inputs);
   const reset = useDealStore((s) => s.reset);
+  const buyBox = useSettingsStore((s) => s.buyBox);
 
   const r = computeBrrrr(inp);
-  const ev = evaluateBuyBox(r, DEFAULT_BUY_BOX);
+  const ev = evaluateBuyBox(r, buyBox);
   const vc = verdictColor(ev.verdict);
   const heroColor = ev.verdict === "GO" ? GREEN : ev.verdict === "MARGINAL" ? Tactical.status.amberBright : Tactical.status.red;
   const mc = (s: "pass" | "fail" | "watch") => (s === "pass" ? GREEN : s === "watch" ? Tactical.status.amber : Tactical.status.red);
@@ -192,7 +194,7 @@ export default function UnderwriteScreen() {
             {r.isFullyRecycled ? "♾" : formatUSD(r.cashLeftInDeal)}
           </Mono>
           <Mono size={9} color={Tactical.text.muted}>
-            TGT ≤ {formatUSD(DEFAULT_BUY_BOX.maxCashLeftIn)}
+            TGT ≤ {formatUSD(buyBox.maxCashLeftIn)}
           </Mono>
         </View>
         <View style={{ flexDirection: "row", gap: 14, marginTop: 10, borderTopWidth: 1, borderTopColor: hairline(0.1), paddingTop: 10 }}>
