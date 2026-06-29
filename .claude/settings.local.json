@@ -6,7 +6,8 @@
       "Bash(npx tsc *)",
       "Bash(git add *)",
       "Bash(set -o pipefail)",
-      "Bash(npx expo *)"
+      "Bash(npx expo *)",
+      "Bash(npx jest *)"
     ]
   }
 }

@@ -113,14 +113,18 @@ function SavedCard({ record, onPress }: { record: DealRecord; onPress: () => voi
 export default function SavedDossierScreen() {
   const router = useRouter();
   const [deals, setDeals] = useState<DealRecord[]>([]);
+  const [ready, setReady] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
       (async () => {
         await seedIfEmpty();
-        const loaded = await listDeals();
-        if (active) setDeals(loaded);
+        const rows = await listDeals();
+        if (active) {
+          setDeals(rows);
+          setReady(true);
+        }
       })();
       return () => {
         active = false;
@@ -147,7 +151,13 @@ export default function SavedDossierScreen() {
       </TopBar>
 
       <ScrollView contentContainerStyle={{ padding: 14 }} showsVerticalScrollIndicator={false}>
-        {deals.length === 0 ? (
+        {!ready ? (
+          <View style={{ alignItems: "center", paddingVertical: 60 }}>
+            <Mono size={10} color={Tactical.text.dim} spacing={0.5}>
+              LOADING OPS…
+            </Mono>
+          </View>
+        ) : deals.length === 0 ? (
           <View style={{ alignItems: "center", paddingVertical: 60 }}>
             <Mono size={10} color={Tactical.text.dim} spacing={0.5}>
               NO SAVED OPS · RUN AN ANALYSIS
