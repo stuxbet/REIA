@@ -63,3 +63,70 @@ export const Spacing = {
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
+
+/* ------------------------------------------------------------------ *
+ * REIA Tactical — dark-only military/HUD palette.
+ * Source of truth: docs handoff "REIA — Tactical BRRRR". Dark is the
+ * default and only theme; light mode is intentionally not wired for v1.
+ * ------------------------------------------------------------------ */
+export const Tactical = {
+  bg: {
+    page: '#060A07',
+    screen: '#0A0F0C',
+    deep: '#070C09',
+    bar: '#070C09',
+    sheet: '#0C120E',
+    panel: '#11180F',
+    panel2: '#0E140C',
+    raised: '#10170F',
+  },
+  green: {
+    primary: '#7CFF9B',
+    on: '#06100A',
+    bright: '#BFFFD0',
+    deep: '#3E8C5C',
+    lime: '#B6FF5C',
+  },
+  text: {
+    heading: '#EAF6EE',
+    primary: '#D7E6DC',
+    secondary: '#9FB6A6',
+    muted: '#7E9587',
+    faint: '#6E8377',
+    dim: '#566B5D',
+    backdrop: '#33433A',
+  },
+  status: {
+    amber: '#FFB23E',
+    amberBright: '#FFD089',
+    orange: '#FF7A4A',
+    red: '#FF5A52',
+    redLight: '#FF8079',
+    cyan: '#54E6E0',
+  },
+  hairline: 'rgba(124,255,155,0.14)',
+  heat: { hot: '#FF5A52', warm: '#FFB23E', cold: '#5E7466' },
+  verdict: { go: '#7CFF9B', marginal: '#FFB23E', nogo: '#FF5A52' },
+  pipeline: {
+    NEW: '#7CFF9B',
+    RECON: '#FFB23E',
+    CONTACT: '#54E6E0',
+    ENGAGED: '#B6FF5C',
+    DEAD: '#6E8377',
+  },
+} as const;
+
+/** Green-tinted hairline at a given alpha (common values .12 .14 .16 .18). */
+export const hairline = (alpha = 0.14) => `rgba(124,255,155,${alpha})`;
+
+/** Loaded font family names (see @expo-google-fonts/* and the root layout). */
+export const TacticalFonts = {
+  ui: 'ChakraPetch_700Bold',
+  uiSemi: 'ChakraPetch_600SemiBold',
+  uiMed: 'ChakraPetch_500Medium',
+  uiReg: 'ChakraPetch_400Regular',
+  mono: 'JetBrainsMono_400Regular',
+  monoMed: 'JetBrainsMono_500Medium',
+  monoBold: 'JetBrainsMono_700Bold',
+  monoXBold: 'JetBrainsMono_800ExtraBold',
+} as const;
