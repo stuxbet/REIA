@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit *)",
+      "Bash(rm -f src/db/.gitkeep)",
+      "Bash(npx tsc *)",
+      "Bash(git add *)"
+    ]
+  }
+}
