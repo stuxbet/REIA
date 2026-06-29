@@ -1,9 +1,8 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import { ScrollView, View } from "react-native";
 
 import { computeBrrrr, evaluateBuyBox } from "@/calc/brrrr";
-import { type BrrrrInputs, DEFAULT_BUY_BOX, WORKED_EXAMPLE } from "@/calc/types";
+import { DEFAULT_BUY_BOX } from "@/calc/types";
 import {
   ChamferButton,
   CornerBrackets,
@@ -19,10 +18,9 @@ import {
 import { Tactical, hairline } from "@/constants/theme";
 import { formatPercent, formatUSD } from "@/lib/format";
 import { verdictColor } from "@/lib/tactical";
+import { useDealStore } from "@/store/deal";
 
 const GREEN = Tactical.green.primary;
-
-type NumKey = keyof BrrrrInputs;
 
 function InputCell({
   label,
@@ -102,10 +100,9 @@ function Callout({ children, danger }: { children: React.ReactNode; danger?: boo
 
 export default function UnderwriteScreen() {
   const router = useRouter();
-  const [inp, setInp] = useState<BrrrrInputs>(WORKED_EXAMPLE);
-
-  const bump = (key: NumKey, delta: number, min = 0) =>
-    setInp((p) => ({ ...p, [key]: Math.max(min, +(p[key] + delta).toFixed(4)) }));
+  const inp = useDealStore((s) => s.inputs);
+  const bump = useDealStore((s) => s.bump);
+  const reset = useDealStore((s) => s.reset);
 
   const r = computeBrrrr(inp);
   const ev = evaluateBuyBox(r, DEFAULT_BUY_BOX);
@@ -123,7 +120,7 @@ export default function UnderwriteScreen() {
           titleSpacing={2}
           sub="TGT-0147 · 1428 ELM AVE"
           right={
-            <IconButton onPress={() => setInp(WORKED_EXAMPLE)}>
+            <IconButton onPress={reset}>
               <Ui size={11} weight="semi" spacing={1} color={Tactical.text.secondary}>
                 ↻
               </Ui>
