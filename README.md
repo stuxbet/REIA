@@ -1,56 +1,47 @@
-# Welcome to your Expo app 👋
+# REIA — Real Estate Investment Analyzer
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An iOS app for **scouting real estate deals** and **underwriting them** with a fast, BRRRR-focused investment calculator.
 
-## Get started
+> Status: **Concept / pre-development.** This repo currently holds planning docs only.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## The two pillars
 
-2. Start the app
+1. **Deal Scouting (Driving for Dollars)** — find off-market distressed properties in the field: a visual map, manual pin-dropping with photos and distress tags, owner/tax enrichment, lead-pipeline management, and outreach the user sends from their own Mail/Messages/Phone (nothing routes through a backend).
+2. **Deal Calculator** — run any property through a BRRRR-first underwriting model (rehab, ARV, refinance, cash-left-in-deal, post-refi cash flow) and instantly see whether the numbers work.
 
-   ```bash
-   npx expo start
-   ```
+## Locked scope decisions
 
-In the output, you'll find options to open the app in a
+These came out of the initial concept conversation (2026-06-29) and drive every other doc:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+| Decision | Choice | Why it matters |
+| --- | --- | --- |
+| Developer experience | Experienced dev, some mobile | Can go full-custom code; roadmap can move fast |
+| Target platform | **iPhone only** | No Android/web parity work in v1 |
+| Build machine | **Windows** | Rules out local Xcode → drives the stack choice |
+| Primary strategy | **BRRRR** | Calculator is built around rehab → refi → cash-out |
+| Scouting approach | **Driving for dollars** (full funnel; outreach via handoff, no route tracking yet) | Off-market deals on free phone capabilities; see scouting doc |
+| Deal data (v1) | **Free / low-cost APIs** | Scouting starts with free tiers + public data; owner enrichment is the cost pressure point |
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Recommended stack (headline)
 
-## Get a fresh project
+**React Native + Expo (managed workflow) + EAS Build, in TypeScript.**
+The only mainstream way to build, device-test, and ship an iOS app *from Windows with no Mac*. See [`docs/04-tech-stack.md`](docs/04-tech-stack.md) for the full breakdown and alternatives.
 
-When you're ready, run:
+## Documentation index
 
-```bash
-npm run reset-project
-```
+| Doc | What's in it |
+| --- | --- |
+| [`docs/00-concept.md`](docs/00-concept.md) | Vision, problem, target user, scope & non-goals |
+| [`docs/01-deal-scouting.md`](docs/01-deal-scouting.md) | Driving-for-dollars funnel + free/low-cost data sources |
+| [`docs/02-calculator-spec.md`](docs/02-calculator-spec.md) | BRRRR calculator: inputs, formulas, output metrics |
+| [`docs/03-user-stories.md`](docs/03-user-stories.md) | Personas, epics, user stories with acceptance criteria |
+| [`docs/04-tech-stack.md`](docs/04-tech-stack.md) | Full stack recommendation + Windows→iOS pipeline |
+| [`docs/05-roadmap.md`](docs/05-roadmap.md) | Phased plan, goal-level (what/why per phase) |
+| [`docs/06-implementation-plan.md`](docs/06-implementation-plan.md) | Build-level: ordered, commit-sized tasks per phase |
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Conventions
 
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Docs are numbered by reading order. Start at `00-concept.md`.
+- Decisions are dated; when a decision changes, update the doc and note the date rather than deleting the old rationale.
