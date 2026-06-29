@@ -71,17 +71,20 @@ export function MetricTile({
   benchmark,
   status = "pass",
   valueColor,
+  onPress,
 }: {
   label: string;
   value: string;
   benchmark?: string;
   status?: MetricStatus;
   valueColor?: string;
+  onPress?: () => void;
 }) {
   const sc = STATUS_COLOR[status];
   return (
-    <View
-      style={{
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
         flex: 1,
         backgroundColor: Tactical.bg.panel2,
         borderWidth: 1,
@@ -90,7 +93,8 @@ export function MetricTile({
         borderTopColor: sc,
         padding: 10,
         gap: 5,
-      }}
+        opacity: pressed && onPress ? 0.7 : 1,
+      })}
     >
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <Ui size={7.5} weight="semi" spacing={1} color={Tactical.text.faint}>
@@ -106,7 +110,7 @@ export function MetricTile({
           {benchmark}
         </Mono>
       ) : null}
-    </View>
+    </Pressable>
   );
 }
 
