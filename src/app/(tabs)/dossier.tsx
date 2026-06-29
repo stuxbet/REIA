@@ -1,4 +1,4 @@
-import { useFocusEffect, useRouter } from "expo-router";
+import { type Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
@@ -136,9 +136,9 @@ export default function SavedDossierScreen() {
           titleSpacing={3}
           sub={`SAVED ANALYSES · ${deals.length} OPS`}
           right={
-            <IconButton onPress={() => {}}>
-              <Ui size={12} color={Tactical.text.secondary}>
-                ⇅
+            <IconButton onPress={() => router.push("/settings" as Href)}>
+              <Ui size={13} color={Tactical.text.secondary}>
+                ⚙
               </Ui>
             </IconButton>
           }
