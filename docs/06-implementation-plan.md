@@ -104,9 +104,10 @@ Everything gates on two things: a proven Windows→TestFlight pipeline (Phase 0)
 ### 2.4 — Bridge to the calculator
 - [ ] **(S)** "Underwrite" on a lead loads it into the deal store (address/leadId + estimated ARV) so UNDERWRITE opens pre-filled and the saved deal links back to the lead.
 
-### 2.5 — Native capture (needs a one-time dev build)
-- [ ] **(L)** Real map (`react-native-maps`, Apple provider) with live pins; foreground location + reverse-geocode (`expo-location`).
-- [ ] **(M)** Real photos (`expo-image-picker` / camera → `expo-image`); offline persist.
+### 2.5 — Native capture
+- [x] Foreground location + reverse-geocode in CAPTURE (`expo-location`) — Expo Go.
+- [x] Real photos in CAPTURE (`expo-image-picker` → `expo-image`) — Expo Go.
+- [ ] **(L)** Real map (`react-native-maps`, Apple provider) with live pins — **needs a one-time dev build** (not in Expo Go); RECON map stays stylized until then.
 
 ### 2.6 — Outreach + templates ✅ (shipped in the frontend)
 - [x] Channel handoff via `expo-linking` (`mailto:`/`sms:`/`tel:`) + merged message with fields — **no backend send**.
