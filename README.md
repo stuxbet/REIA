@@ -2,7 +2,7 @@
 
 An iOS app for **scouting real estate deals** and **underwriting them** with a fast, BRRRR-focused investment calculator.
 
-> Status: **Concept / pre-development.** This repo currently holds planning docs only.
+> Status: **Phase 1 complete.** Tested BRRRR engine + SQLite-persistent calculator on a dark "tactical" UI (Expo SDK 56 · Expo Router · TypeScript), running in Expo Go. **Phase 2 (driving-for-dollars persistence) in progress.** See [`docs/06-implementation-plan.md`](docs/06-implementation-plan.md).
 
 ---
 

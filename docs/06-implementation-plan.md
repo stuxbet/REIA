@@ -12,6 +12,14 @@ The build-level companion to [`05-roadmap.md`](05-roadmap.md). The roadmap says 
 - **Definition of done (every task):** typechecks (strict TS) · lint/format clean · tests green · runs on a real iPhone · committed.
 - **Guiding rules** (from the roadmap): engine before UI · tests before features · ship after Phase 1 · local-first · outreach never touches a backend.
 
+## Status — 2026-06-29
+
+- **Phase 0 — Foundation: ✅ done.** Expo SDK 56 + Router + strict TS, module structure, Jest; on GitHub ([stuxbet/REIA](https://github.com/stuxbet/REIA)).
+- **Phase 1 — Calculator: ✅ done** (except the user-gated App Store ship). Tested BRRRR engine; UNDERWRITE wired live; SQLite-persisted saved deals; editable inputs; persisted buy-box + Settings screen; per-metric formula reveal. Runs in Expo Go.
+- **"REIA Tactical" frontend leapt ahead of the roadmap:** all 8 v1 screens exist as UI (dark tactical theme). So the _calculator_ screens (UNDERWRITE/VERDICT/DOSSIER) are real + persistent; the _D4D_ screens (RECON/CAPTURE/TARGETS/TARGET DOSSIER/OUTREACH) currently render **sample data** — except OUTREACH, whose native handoff is already real.
+- **Phase 2 — Driving for Dollars: 🚧 in progress** (make the D4D side real — see revised section below). Native map/location/camera need a one-time dev build.
+- Remaining Phase 1 step (user-gated): `eas build -p ios` → TestFlight → App Store (needs your Apple Developer account).
+
 ## Critical path (the spine)
 
 ```
@@ -24,7 +32,7 @@ Everything gates on two things: a proven Windows→TestFlight pipeline (Phase 0)
 
 ---
 
-## Phase 0 — Foundation
+## Phase 0 — Foundation ✅
 
 **Objective:** a working Windows→iPhone dev loop and an empty-but-shippable app skeleton.
 
@@ -41,7 +49,7 @@ Everything gates on two things: a proven Windows→TestFlight pipeline (Phase 0)
 
 ---
 
-## Phase 1 — Calculator MVP (ship v1.0) ⭐
+## Phase 1 — Calculator MVP (ship v1.0) ⭐ ✅ (ship step pending)
 
 **Objective:** the smallest trustworthy product — a BRRRR calculator with saved deals. Built engine-first, tests-first.
 
@@ -77,34 +85,38 @@ Everything gates on two things: a proven Windows→TestFlight pipeline (Phase 0)
 
 ---
 
-## Phase 2 — Driving for Dollars (primary scouting)
+## Phase 2 — Driving for Dollars (make the shells real) 🚧
 
-**Objective:** the full off-market funnel. Built in slices; each slice is independently useful and shippable as an update.
+**Context:** the RECON / CAPTURE / TARGETS / TARGET DOSSIER / OUTREACH screens already exist from the tactical frontend. This phase replaces their **sample data** with real capture + SQLite persistence, then adds the native pieces. Persistence-first, mirroring Phase 1.
 
-### 2a — Capture (local-first, no backend)
-- [ ] **(M)** Map screen: `react-native-maps`; request **foreground** location (`expo-location`); center on user; render existing lead pins.
-- [ ] **(M)** Drop a pin three ways: one-tap at current location · tap-on-map · address search (geocode). Create a lead record (lat/lng, timestamp).
-- [ ] **(M)** `/db` leads schema + repository (offline-first SQLite).
-- [ ] **(M)** Capture form: photos (`expo-camera`/`expo-image-picker` → `expo-file-system`), notes, multi-select **distress tags**.
-- [ ] **(S)** Offline check: capture + photos work in airplane mode and persist.
+### 2.1 — Leads persistence (Expo Go)
+- [ ] **(M)** `/db` leads table + repository (create/list/get/update/delete), offline-first SQLite — mirror the deals repo.
+- [ ] **(S)** Seed the sample leads on first run; load helpers.
 
-### 2b — Identify & organize
-- [ ] **(S)** Reverse-geocode pin → address (`expo-location`), confirm/edit; near-duplicate warning.
-- [ ] **(M)** Lead list view ↔ map view toggle; **status pipeline** (new → researching → contacted → negotiating → under contract → dead); filter/sort by status, tag, motivation.
+### 2.2 — Capture → save (Expo Go)
+- [ ] **(M)** CAPTURE's CONFIRM writes a real lead (address, distress tags, heat, coords) into the DB instead of just navigating.
 
-### 2c — Enrich (first backend; optional)
-- [ ] **(M)** Supabase project + **Edge Function** proxying RentCast/ATTOM (keys server-side); client hooks via TanStack Query.
-- [ ] **(M)** Enrichment UI: pull owner, last sale, tax status; manual entry fallback; compute **absentee flag** (mailing ≠ property) + simple hot/warm/cold **motivation score**.
+### 2.3 — Real reads (Expo Go)
+- [ ] **(M)** TARGETS reads real leads; status filter chips actually filter.
+- [ ] **(S)** TARGET DOSSIER reads the lead by id from the DB.
+- [ ] **(S)** RECON nearby-targets + pins come from real leads.
 
-### 2d — Outreach (handoff, never through us)
-- [ ] **(S)** Message templates with merge fields (owner name, property address) + a template editor.
-- [ ] **(M)** Handoff actions: `expo-linking` (`mailto:`/`sms:`/`tel:`), Share API, and `expo-print` letter PDF. Confirm **no backend send path**.
+### 2.4 — Bridge to the calculator
+- [ ] **(S)** "Underwrite" on a lead loads it into the deal store (address/leadId + estimated ARV) so UNDERWRITE opens pre-filled and the saved deal links back to the lead.
 
-### 2e — Bridge to the calculator
-- [ ] **(S)** "Underwrite" on a lead opens the Phase 1 calculator pre-filled with an estimated ARV; link the saved deal ↔ lead.
+### 2.5 — Native capture (needs a one-time dev build)
+- [ ] **(L)** Real map (`react-native-maps`, Apple provider) with live pins; foreground location + reverse-geocode (`expo-location`).
+- [ ] **(M)** Real photos (`expo-image-picker` / camera → `expo-image`); offline persist.
 
-**Deliverable:** drive a neighborhood → log distressed properties with photos → see owner/motivation → reach out from your own apps → underwrite any lead, with no paid data feed (enrichment optional).
-**Validation:** a lead captured offline with photos survives sync; outreach opens the correct native app pre-filled; underwrite round-trips to a saved deal.
+### 2.6 — Outreach + templates ✅ (shipped in the frontend)
+- [x] Channel handoff via `expo-linking` (`mailto:`/`sms:`/`tel:`) + merged message with fields — **no backend send**.
+- [ ] **(M)** Editable template library + `expo-print` letter export (enhancement).
+
+### 2.7 — Enrich (deferred / optional backend)
+- [ ] **(M)** Supabase Edge Function proxying RentCast/ATTOM; manual-entry fallback; absentee flag + motivation score.
+
+**Deliverable:** capture a property → it persists → appears in TARGETS / RECON / DOSSIER → underwrite it → reach out from your own apps.
+**Validation:** a captured lead survives an app restart; TARGETS filters work; underwrite opens pre-filled from a lead.
 
 ---
 

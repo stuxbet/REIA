@@ -4,7 +4,12 @@ _Last updated: 2026-06-29_
 
 Sequenced by dependency and value, not calendar dates (solo-dev timing varies). Each phase has a goal and exit criteria. The guiding idea: **ship the calculator as a real App Store app early, then layer scouting on top.**
 
-## Phase 0 — Foundation
+## Status — 2026-06-29
+
+- **Phase 0 ✅** · **Phase 1 ✅** (calculator real + SQLite-persistent; only the App Store ship remains, user-gated) · **Phase 2 🚧 in progress.**
+- A **"REIA Tactical"** dark-themed frontend built all 8 v1 screens ahead of schedule. The calculator screens (UNDERWRITE/VERDICT/DOSSIER) are real + persistent; the driving-for-dollars screens currently show **sample data** (OUTREACH handoff is real). Phase 2 makes the D4D side real — build-level steps live in [`06-implementation-plan.md`](06-implementation-plan.md).
+
+## Phase 0 — Foundation ✅
 **Goal:** a Windows→iPhone dev loop that works end to end.
 - Initialize Expo (TypeScript) + Expo Router project; set up `/calc`, `/db`, `/store` structure.
 - Install Expo Go on your iPhone; confirm hot-reload on device.
@@ -13,7 +18,7 @@ Sequenced by dependency and value, not calendar dates (solo-dev timing varies). 
 
 **Exit:** you can change code on Windows and see it on your iPhone, and you've shipped a "hello world" build to TestFlight.
 
-## Phase 1 — Calculator MVP (ship this) ⭐
+## Phase 1 — Calculator MVP (ship this) ⭐ ✅ (ship step pending)
 **Goal:** the smallest trustworthy product — maps to the MVP cut line in [`03-user-stories.md`](03-user-stories.md).
 - Implement the pure BRRRR engine (`calc/brrrr.ts`) exactly per [`02-calculator-spec.md`](02-calculator-spec.md).
 - Snapshot-test it against the worked example **before** building UI.
