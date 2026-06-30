@@ -1,3 +1,4 @@
+import * as Print from "expo-print";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, View } from "react-native";
@@ -65,6 +66,10 @@ const TEMPLATES: Template[] = [
 
 function merge(text: string, owner: string, prop: string) {
   return text.replaceAll("[OWNER]", owner).replaceAll("[PROP]", prop);
+}
+
+function letterHtml(subject: string, body: string) {
+  return `<html><body style="font-family:-apple-system,Helvetica,sans-serif;font-size:14px;line-height:1.6;padding:48px;color:#111;"><p style="text-transform:uppercase;letter-spacing:1px;color:#666;font-size:11px;">${subject}</p><hr style="border:none;border-top:1px solid #ccc;margin:16px 0;"/><p>${body}</p></body></html>`;
 }
 
 /** Render a template body with [OWNER]/[PROP] merge fields filled + highlighted. */
@@ -135,13 +140,13 @@ export default function OutreachScreen() {
   const subject = merge(tpl.subject, owner, prop);
   const body = merge(tpl.body, owner, prop);
 
-  const handoff = () => {
+  const handoff = async () => {
     const s = encodeURIComponent(subject);
     const b = encodeURIComponent(body);
     if (channel === "MAIL") Linking.openURL(`mailto:?subject=${s}&body=${b}`);
     else if (channel === "SMS") Linking.openURL(`sms:&body=${b}`);
     else if (channel === "CALL") Linking.openURL("tel:");
-    // LETTER → printable PDF (expo-print) wired in the next step.
+    else if (channel === "LETTER") await Print.printAsync({ html: letterHtml(subject, body) });
   };
 
   return (
