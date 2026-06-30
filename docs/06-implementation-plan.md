@@ -142,7 +142,7 @@ Everything gates on two things: a proven Windows→TestFlight pipeline (Phase 0)
 ## Phase 5 — Depth & polish (deferred)
 
 - [ ] **(M)** Sensitivity analysis (ARV ±10% / rate ±1% / rehab ±20% grid).
-- [ ] **(M)** Long-term-rental and fix-&-flip modes on the same engine.
+- [x] **Long-term-rental and fix-&-flip modes** on the same engine — UNDERWRITE toggle switches the readout + inputs; `computeFlip`/`computeLtr` tested.
 - [ ] **(L)** Optional account + cloud sync via the VPS backend — additive; app stays local-first.
 
 ---
