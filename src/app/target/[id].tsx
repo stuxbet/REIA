@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 
+import { WORKED_EXAMPLE } from "@/calc/types";
 import {
   ActionBar,
   BackButton,
@@ -23,6 +24,7 @@ import { Tactical, hairline } from "@/constants/theme";
 import type { Lead } from "@/data/sample";
 import { getLeadById } from "@/db/leads-repo";
 import { heatColor } from "@/lib/tactical";
+import { useDealStore } from "@/store/deal";
 
 const RED = Tactical.status.red;
 const AMBER = Tactical.status.amber;
@@ -63,6 +65,7 @@ export default function TargetDossierScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [lead, setLead] = useState<Lead | null>(null);
+  const loadDeal = useDealStore((s) => s.load);
 
   useEffect(() => {
     let on = true;
@@ -222,7 +225,14 @@ export default function TargetDossierScreen() {
       </ScrollView>
 
       <ActionBar>
-        <ChamferButton label="△ UNDERWRITE" onPress={() => router.push("/underwrite")} full />
+        <ChamferButton
+          label="△ UNDERWRITE"
+          onPress={() => {
+            loadDeal(WORKED_EXAMPLE, { address: lead.address, leadId: lead.id });
+            router.push("/underwrite");
+          }}
+          full
+        />
         <ChamferButton label="✉ CONTACT" variant="outline" onPress={() => router.push(`/outreach/${lead.id}`)} full />
       </ActionBar>
     </ScreenShell>

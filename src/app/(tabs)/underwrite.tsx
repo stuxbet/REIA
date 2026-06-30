@@ -146,6 +146,8 @@ export default function UnderwriteScreen() {
   const router = useRouter();
   const inp = useDealStore((s) => s.inputs);
   const reset = useDealStore((s) => s.reset);
+  const address = useDealStore((s) => s.address);
+  const leadId = useDealStore((s) => s.leadId);
   const buyBox = useSettingsStore((s) => s.buyBox);
 
   const r = computeBrrrr(inp);
@@ -162,7 +164,7 @@ export default function UnderwriteScreen() {
           title="UNDERWRITE"
           titleSize={18}
           titleSpacing={2}
-          sub="TGT-0147 · 1428 ELM AVE"
+          sub={`${leadId ?? "—"} · ${address}`}
           right={
             <IconButton onPress={reset}>
               <Ui size={11} weight="semi" spacing={1} color={Tactical.text.secondary}>
@@ -273,7 +275,7 @@ export default function UnderwriteScreen() {
           </Row>
         </Module>
 
-        <ChamferButton label="RUN ANALYSIS ▸ VERDICT" onPress={() => router.push("/analysis/TGT-0147")} />
+        <ChamferButton label="RUN ANALYSIS ▸ VERDICT" onPress={() => router.push(`/analysis/${leadId ?? "TGT-0147"}`)} />
       </ScrollView>
     </ScreenShell>
   );
