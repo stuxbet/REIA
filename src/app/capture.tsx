@@ -1,7 +1,9 @@
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import {
   ActionBar,
@@ -34,9 +36,11 @@ function fmtCoord(lat: number, lng: number) {
   return `${Math.abs(lat).toFixed(4)}°${lat >= 0 ? "N" : "S"} ${Math.abs(lng).toFixed(4)}°${lng >= 0 ? "E" : "W"}`;
 }
 
-function PhotoTile({ label, dashed }: { label: string; dashed?: boolean }) {
+function PhotoTile({ label, dashed, uri, onPress }: { label?: string; dashed?: boolean; uri?: string; onPress?: () => void }) {
   return (
-    <View
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
       style={{
         flex: 1,
         aspectRatio: 1,
@@ -49,11 +53,17 @@ function PhotoTile({ label, dashed }: { label: string; dashed?: boolean }) {
         overflow: "hidden",
       }}
     >
-      {dashed ? null : <HazardStripes color="rgba(124,255,155,0.06)" band={6} />}
-      <Mono size={8} color={dashed ? Tactical.green.deep : Tactical.text.faint} spacing={0.5}>
-        {label}
-      </Mono>
-    </View>
+      {uri ? (
+        <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+      ) : (
+        <>
+          {dashed ? null : <HazardStripes color="rgba(124,255,155,0.06)" band={6} />}
+          <Mono size={8} color={dashed ? Tactical.green.deep : Tactical.text.faint} spacing={0.5}>
+            {label}
+          </Mono>
+        </>
+      )}
+    </Pressable>
   );
 }
 
@@ -63,6 +73,7 @@ export default function CaptureScreen() {
   const [addr, setAddr] = useState<{ line1: string; city: string } | null>(null);
   const [locating, setLocating] = useState(true);
   const [selected, setSelected] = useState(new Set(["VACANT", "OVERGROWN", "ROOF DMG"]));
+  const [photos, setPhotos] = useState<string[]>([]);
 
   useEffect(() => {
     let on = true;
@@ -98,6 +109,11 @@ export default function CaptureScreen() {
       return next;
     });
 
+  const pickPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ quality: 0.5 });
+    if (!res.canceled && res.assets[0]) setPhotos((p) => [...p, res.assets[0].uri].slice(0, 4));
+  };
+
   const confirm = async () => {
     const tags = [...selected];
     const lead: Lead = {
@@ -111,7 +127,7 @@ export default function CaptureScreen() {
       status: "NEW",
       distressTags: tags,
       flags: tags.slice(0, 2).join(" · ") || "NEW TARGET",
-      photos: 0,
+      photos: photos.length,
     };
     await saveLead(lead);
     router.replace("/targets");
@@ -192,10 +208,11 @@ export default function CaptureScreen() {
         <View style={{ gap: 8 }}>
           <SectionLabel>PHOTO INTEL</SectionLabel>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <PhotoTile label="ROOF" />
-            <PhotoTile label="FRONT" />
-            <PhotoTile label="YARD" />
-            <PhotoTile label="+ ADD" dashed />
+            {[0, 1, 2, 3].map((i) => {
+              if (photos[i]) return <PhotoTile key={i} uri={photos[i]} />;
+              if (i === photos.length) return <PhotoTile key={i} label="+ ADD" dashed onPress={pickPhoto} />;
+              return <PhotoTile key={i} label={["ROOF", "FRONT", "YARD", "INT"][i]} />;
+            })}
           </View>
         </View>
 

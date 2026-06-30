@@ -42,6 +42,13 @@
         {
           "locationWhenInUsePermission": "REIA uses your location to drop and geocode property targets while scouting."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "REIA attaches photos to property targets you scout.",
+          "cameraPermission": "REIA lets you photograph property targets while scouting."
+        }
       ]
     ],
     "experiments": {
