@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { type ReactNode, useEffect, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
 
 import { WORKED_EXAMPLE } from "@/calc/types";
 import {
@@ -20,8 +20,8 @@ import {
   TopBar,
   Ui,
 } from "@/components/tactical";
-import { Tactical, hairline } from "@/constants/theme";
-import type { Lead, PipelineStatus } from "@/data/sample";
+import { Tactical, TacticalFonts, hairline } from "@/constants/theme";
+import type { Lead, OwnerIntel, PipelineStatus } from "@/data/sample";
 import { getLeadById, saveLead } from "@/db/leads-repo";
 import { heatColor, statusColor } from "@/lib/tactical";
 import { useDealStore } from "@/store/deal";
@@ -61,11 +61,30 @@ function IntelRow({ label, value, valueColor = Tactical.text.primary, bold }: { 
   );
 }
 
+function EditField({ label, value, onChange, ph }: { label: string; value: string; onChange: (v: string) => void; ph: string }) {
+  return (
+    <View style={{ gap: 4 }}>
+      <Ui size={7.5} weight="semi" spacing={1} color={Tactical.text.faint}>
+        {label}
+      </Ui>
+      <TextInput
+        value={value}
+        onChangeText={onChange}
+        placeholder={ph}
+        placeholderTextColor={Tactical.text.dim}
+        style={{ fontFamily: TacticalFonts.mono, fontSize: 12, color: Tactical.text.heading, borderWidth: 1, borderColor: hairline(0.16), backgroundColor: Tactical.bg.panel2, paddingHorizontal: 10, paddingVertical: 8 }}
+      />
+    </View>
+  );
+}
+
 export default function TargetDossierScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [lead, setLead] = useState<Lead | null>(null);
   const loadDeal = useDealStore((s) => s.load);
+  const [editIntel, setEditIntel] = useState(false);
+  const [draft, setDraft] = useState({ name: "", mailingAddress: "", lastSale: "", assessed: "", taxStatus: "", occupancy: "" });
 
   useEffect(() => {
     let on = true;
@@ -100,6 +119,33 @@ export default function TargetDossierScreen() {
     const updated = { ...lead, status: s };
     setLead(updated);
     await saveLead(updated);
+  };
+
+  const startEnrich = () => {
+    setDraft({
+      name: owner?.name ?? "",
+      mailingAddress: owner?.mailingAddress ?? "",
+      lastSale: owner?.lastSale ?? "",
+      assessed: owner?.assessed ?? "",
+      taxStatus: owner?.taxStatus ?? "",
+      occupancy: owner?.occupancy ?? "",
+    });
+    setEditIntel(true);
+  };
+  const saveIntel = async () => {
+    const o: OwnerIntel = {
+      name: draft.name || "—",
+      mailingAddress: draft.mailingAddress || "—",
+      absentee: !!draft.mailingAddress.trim() && draft.mailingAddress.toUpperCase() !== lead.address.toUpperCase(),
+      lastSale: draft.lastSale || "—",
+      assessed: draft.assessed || "—",
+      taxStatus: draft.taxStatus || "—",
+      occupancy: draft.occupancy || "—",
+    };
+    const updated = { ...lead, owner: o };
+    setLead(updated);
+    await saveLead(updated);
+    setEditIntel(false);
   };
 
   return (
@@ -197,11 +243,18 @@ export default function TargetDossierScreen() {
           <Panel>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
               <SectionLabel>INTEL // OWNER &amp; TAX</SectionLabel>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                <StatusDot color={Tactical.green.primary} size={5} />
-                <Ui size={8} weight="semi" spacing={1} color={Tactical.green.primary}>
-                  ENRICHED
-                </Ui>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                  <StatusDot color={Tactical.green.primary} size={5} />
+                  <Ui size={8} weight="semi" spacing={1} color={Tactical.green.primary}>
+                    ENRICHED
+                  </Ui>
+                </View>
+                <Pressable onPress={startEnrich}>
+                  <Ui size={8} weight="semi" spacing={1} color={Tactical.text.muted}>
+                    EDIT ▸
+                  </Ui>
+                </Pressable>
               </View>
             </View>
             <IntelRow label="OWNER" value={owner.name} />
@@ -214,7 +267,16 @@ export default function TargetDossierScreen() {
               SRC // RENTCAST · JACKSON CO ASSESSOR
             </Mono>
           </Panel>
-        ) : null}
+        ) : (
+          <Pressable
+            onPress={startEnrich}
+            style={{ borderWidth: 1, borderStyle: "dashed", borderColor: hairline(0.25), padding: 14, alignItems: "center" }}
+          >
+            <Ui size={9} weight="semi" spacing={1} color={Tactical.green.deep}>
+              + ADD OWNER INTEL
+            </Ui>
+          </Pressable>
+        )}
 
         {/* FIELD INTEL */}
         <View style={{ gap: 8 }}>
@@ -269,6 +331,34 @@ export default function TargetDossierScreen() {
         />
         <ChamferButton label="✉ CONTACT" variant="outline" onPress={() => router.push(`/outreach/${lead.id}`)} full />
       </ActionBar>
+
+      {editIntel ? (
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(3,6,4,0.92)", justifyContent: "center", padding: 18 }}>
+          <ScrollView
+            style={{ maxHeight: "88%" }}
+            contentContainerStyle={{ backgroundColor: Tactical.bg.panel, borderWidth: 1, borderColor: hairline(0.2), padding: 16, gap: 10 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <Ui size={11} weight="bold" spacing={1.5} color={Tactical.text.heading}>
+              EDIT INTEL // OWNER &amp; TAX
+            </Ui>
+            <EditField label="OWNER" value={draft.name} onChange={(v) => setDraft((d) => ({ ...d, name: v }))} ph="Estate of R. Hale" />
+            <EditField label="MAILING ADDRESS" value={draft.mailingAddress} onChange={(v) => setDraft((d) => ({ ...d, mailingAddress: v }))} ph="8800 State Line Rd" />
+            <EditField label="LAST SALE" value={draft.lastSale} onChange={(v) => setDraft((d) => ({ ...d, lastSale: v }))} ph="06/1998 · $41,000" />
+            <EditField label="ASSESSED" value={draft.assessed} onChange={(v) => setDraft((d) => ({ ...d, assessed: v }))} ph="$58,200" />
+            <EditField label="TAX STATUS" value={draft.taxStatus} onChange={(v) => setDraft((d) => ({ ...d, taxStatus: v }))} ph="Delinquent · 2yr" />
+            <EditField label="OCCUPANCY" value={draft.occupancy} onChange={(v) => setDraft((d) => ({ ...d, occupancy: v }))} ph="Vacant" />
+            <Mono size={8} color={Tactical.text.dim}>
+              Absentee flag is computed from mailing ≠ site address.
+            </Mono>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
+              <ChamferButton label="CANCEL" variant="outline" color={Tactical.text.muted} onPress={() => setEditIntel(false)} full />
+              <ChamferButton label="SAVE INTEL" onPress={saveIntel} full />
+            </View>
+          </ScrollView>
+        </View>
+      ) : null}
     </ScreenShell>
   );
 }
