@@ -36,7 +36,13 @@
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "REIA uses your location to drop and geocode property targets while scouting."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

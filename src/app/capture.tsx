@@ -1,5 +1,6 @@
+import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 
 import {
@@ -29,6 +30,10 @@ import { saveLead } from "@/db/leads-repo";
 const AMBER = Tactical.status.amber;
 const TAGS = ["VACANT", "OVERGROWN", "ROOF DMG", "BOARDED", "FIRE DMG", "CODE VIOL", "FSBO", "HOARDER"];
 
+function fmtCoord(lat: number, lng: number) {
+  return `${Math.abs(lat).toFixed(4)}°${lat >= 0 ? "N" : "S"} ${Math.abs(lng).toFixed(4)}°${lng >= 0 ? "E" : "W"}`;
+}
+
 function PhotoTile({ label, dashed }: { label: string; dashed?: boolean }) {
   return (
     <View
@@ -54,7 +59,37 @@ function PhotoTile({ label, dashed }: { label: string; dashed?: boolean }) {
 
 export default function CaptureScreen() {
   const router = useRouter();
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [addr, setAddr] = useState<{ line1: string; city: string } | null>(null);
+  const [locating, setLocating] = useState(true);
   const [selected, setSelected] = useState(new Set(["VACANT", "OVERGROWN", "ROOF DMG"]));
+
+  useEffect(() => {
+    let on = true;
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") return;
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        if (on) setCoords(c);
+        const places = await Location.reverseGeocodeAsync({ latitude: c.lat, longitude: c.lng });
+        const p = places[0];
+        if (on && p) {
+          const line1 = [p.streetNumber, p.street ?? p.name].filter(Boolean).join(" ").trim().toUpperCase();
+          const city = [p.city, p.region, p.postalCode].filter(Boolean).join(", ").toUpperCase();
+          setAddr({ line1: line1 || "DROPPED PIN", city: city || "—" });
+        }
+      } catch {
+        // permission denied or geocode failed — keep the manual fallback values
+      } finally {
+        if (on) setLocating(false);
+      }
+    })();
+    return () => {
+      on = false;
+    };
+  }, []);
   const toggle = (t: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
@@ -67,9 +102,9 @@ export default function CaptureScreen() {
     const tags = [...selected];
     const lead: Lead = {
       id: `LEAD-${Date.now().toString(36).toUpperCase()}`,
-      address: "1428 ELM AVE",
-      city: "KANSAS CITY, MO 64127",
-      coords: { lat: 39.0991, lng: -94.5772 },
+      address: addr?.line1 ?? "1428 ELM AVE",
+      city: addr?.city ?? "KANSAS CITY, MO 64127",
+      coords: coords ?? { lat: 39.0991, lng: -94.5772 },
       distanceMi: 0.1,
       heat: "HOT",
       motivationScore: 80,
@@ -125,7 +160,7 @@ export default function CaptureScreen() {
           <View style={{ position: "absolute", bottom: 8, left: 10, flexDirection: "row", alignItems: "center", gap: 5 }}>
             <View style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: AMBER }, glowBox(AMBER, 6, 0.8)]} />
             <Mono size={8} color={AMBER}>
-              PIN LOCKED · 39.0991°N 94.5772°W
+              {coords ? `PIN LOCKED · ${fmtCoord(coords.lat, coords.lng)}` : locating ? "ACQUIRING GPS…" : "PIN · MANUAL ENTRY"}
             </Mono>
           </View>
         </View>
@@ -135,8 +170,8 @@ export default function CaptureScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <SectionLabel>ADDRESS</SectionLabel>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-              <Ui size={8} weight="semi" spacing={1} color={Tactical.green.primary}>
-                GEOCODED ✓
+              <Ui size={8} weight="semi" spacing={1} color={addr ? Tactical.green.primary : AMBER}>
+                {addr ? "GEOCODED ✓" : "LOCATING…"}
               </Ui>
               <Ui size={8} weight="semi" spacing={1} color={Tactical.text.muted}>
                 EDIT ▸
@@ -145,10 +180,10 @@ export default function CaptureScreen() {
           </View>
           <Panel>
             <Mono size={15} color={Tactical.text.heading} spacing={0.5}>
-              1428 ELM AVE
+              {addr?.line1 ?? "1428 ELM AVE"}
             </Mono>
             <Mono size={10} color={Tactical.text.muted} style={{ marginTop: 3 }}>
-              KANSAS CITY, MO 64127
+              {addr?.city ?? "KANSAS CITY, MO 64127"}
             </Mono>
           </Panel>
         </View>
