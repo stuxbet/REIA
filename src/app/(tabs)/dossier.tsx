@@ -8,6 +8,7 @@ import type { DealStatus } from "@/data/sample";
 import { type DealRecord, deleteDeal, listDeals, seedIfEmpty } from "@/db/deals-repo";
 import { formatPercent, formatUSD } from "@/lib/format";
 import { verdictColor, verdictGlyph } from "@/lib/tactical";
+import { useDealStore } from "@/store/deal";
 
 function dealStatusColor(s: DealStatus): string {
   return s === "PURSUING" ? Tactical.green.primary : s === "ANALYZING" ? Tactical.status.amber : Tactical.text.dim;
@@ -113,6 +114,7 @@ function SavedCard({ record, onPress, onDelete }: { record: DealRecord; onPress:
 
 export default function SavedDossierScreen() {
   const router = useRouter();
+  const loadDeal = useDealStore((s) => s.load);
   const [deals, setDeals] = useState<DealRecord[]>([]);
   const [ready, setReady] = useState(false);
 
@@ -179,14 +181,22 @@ export default function SavedDossierScreen() {
             </Mono>
           </View>
         ) : (
-          deals.map((deal) => (
-            <SavedCard
-              key={deal.id}
-              record={deal}
-              onPress={() => router.push(`/target/${deal.leadId ?? "TGT-0147"}`)}
-              onDelete={() => removeDeal(deal.id, deal.address)}
-            />
-          ))
+          <>
+            <Mono size={7.5} color={Tactical.text.dim} style={{ marginBottom: 8 }}>
+              TAP TO RE-UNDERWRITE · HOLD TO DELETE
+            </Mono>
+            {deals.map((deal) => (
+              <SavedCard
+                key={deal.id}
+                record={deal}
+                onPress={() => {
+                  loadDeal(deal.inputs, { address: deal.address, leadId: deal.leadId });
+                  router.push("/underwrite");
+                }}
+                onDelete={() => removeDeal(deal.id, deal.address)}
+              />
+            ))}
+          </>
         )}
       </ScrollView>
     </ScreenShell>
