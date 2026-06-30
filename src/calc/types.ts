@@ -15,9 +15,10 @@ export interface BrrrrInputs {
   acqLoanRate: number; // interest rate during hold (0 if folded into monthlyHoldingCost)
   acqLoanFees: number; // points + fees on the acquisition loan
 
-  // B · After-repair value
+  // B · After-repair value / sale
   arv: number;
   seventyRulePct: number; // rule-of-thumb screen, default 0.70
+  sellingCostsPct: number; // fix & flip: sale costs as % of ARV (commission + closing)
 
   // C · Refinance
   refiLtv: number; // loan-to-value on ARV, default 0.75
@@ -97,6 +98,7 @@ export const WORKED_EXAMPLE: BrrrrInputs = {
   acqLoanFees: 3_000,
   arv: 200_000,
   seventyRulePct: 0.7,
+  sellingCostsPct: 0.07,
   refiLtv: 0.75,
   refiClosingCosts: 4_000,
   refiRate: 0.075,
