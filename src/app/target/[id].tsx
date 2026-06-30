@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { type ReactNode, useEffect, useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
 
 import { WORKED_EXAMPLE } from "@/calc/types";
 import {
@@ -21,6 +21,7 @@ import {
   Ui,
 } from "@/components/tactical";
 import { Tactical, TacticalFonts, hairline } from "@/constants/theme";
+import { enrichByAddress, isApiConfigured } from "@/data/api";
 import type { Lead, OwnerIntel, PipelineStatus } from "@/data/sample";
 import { getLeadById, saveLead } from "@/db/leads-repo";
 import { heatColor, statusColor } from "@/lib/tactical";
@@ -85,6 +86,7 @@ export default function TargetDossierScreen() {
   const loadDeal = useDealStore((s) => s.load);
   const [editIntel, setEditIntel] = useState(false);
   const [draft, setDraft] = useState({ name: "", mailingAddress: "", lastSale: "", assessed: "", taxStatus: "", occupancy: "" });
+  const [pulling, setPulling] = useState(false);
 
   useEffect(() => {
     let on = true;
@@ -146,6 +148,43 @@ export default function TargetDossierScreen() {
     setLead(updated);
     await saveLead(updated);
     setEditIntel(false);
+  };
+
+  const pullIntel = () => {
+    if (!isApiConfigured()) {
+      Alert.alert("Backend not configured", "Set EXPO_PUBLIC_API_URL and deploy /server to your VPS, then try again.");
+      return;
+    }
+    Alert.alert("Pull RentCast intel?", `This spends 1 of your monthly API requests, for:\n${lead.address}`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Pull (1 request)",
+        onPress: async () => {
+          try {
+            setPulling(true);
+            const r = await enrichByAddress(lead.address);
+            const updated: Lead = {
+              ...lead,
+              owner: {
+                name: r.name,
+                mailingAddress: r.mailingAddress,
+                absentee: r.absentee,
+                lastSale: r.lastSale,
+                assessed: r.assessed,
+                taxStatus: r.taxStatus,
+                occupancy: r.occupancy,
+              },
+            };
+            setLead(updated);
+            await saveLead(updated);
+          } catch (e) {
+            Alert.alert("Enrichment failed", (e as Error).message);
+          } finally {
+            setPulling(false);
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -250,6 +289,11 @@ export default function TargetDossierScreen() {
                     ENRICHED
                   </Ui>
                 </View>
+                <Pressable onPress={pullIntel} disabled={pulling}>
+                  <Ui size={8} weight="semi" spacing={1} color={Tactical.green.primary}>
+                    {pulling ? "…" : "⟳ PULL"}
+                  </Ui>
+                </Pressable>
                 <Pressable onPress={startEnrich}>
                   <Ui size={8} weight="semi" spacing={1} color={Tactical.text.muted}>
                     EDIT ▸
@@ -268,14 +312,32 @@ export default function TargetDossierScreen() {
             </Mono>
           </Panel>
         ) : (
-          <Pressable
-            onPress={startEnrich}
-            style={{ borderWidth: 1, borderStyle: "dashed", borderColor: hairline(0.25), padding: 14, alignItems: "center" }}
-          >
-            <Ui size={9} weight="semi" spacing={1} color={Tactical.green.deep}>
-              + ADD OWNER INTEL
-            </Ui>
-          </Pressable>
+          <View style={{ gap: 8 }}>
+            <Pressable
+              onPress={pullIntel}
+              disabled={pulling}
+              style={{
+                borderWidth: 1,
+                borderColor: Tactical.green.primary,
+                backgroundColor: "rgba(124,255,155,0.08)",
+                padding: 13,
+                alignItems: "center",
+                opacity: pulling ? 0.5 : 1,
+              }}
+            >
+              <Ui size={9} weight="bold" spacing={1} color={Tactical.green.primary}>
+                {pulling ? "PULLING…" : "⟳ PULL RENTCAST INTEL · 1 REQ"}
+              </Ui>
+            </Pressable>
+            <Pressable
+              onPress={startEnrich}
+              style={{ borderWidth: 1, borderStyle: "dashed", borderColor: hairline(0.25), padding: 13, alignItems: "center" }}
+            >
+              <Ui size={9} weight="semi" spacing={1} color={Tactical.text.muted}>
+                + ADD MANUALLY
+              </Ui>
+            </Pressable>
+          </View>
         )}
 
         {/* FIELD INTEL */}
