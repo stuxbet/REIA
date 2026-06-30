@@ -23,7 +23,7 @@ import {
 import { Tactical, TacticalFonts, hairline } from "@/constants/theme";
 import { enrichByAddress, isApiConfigured } from "@/data/api";
 import type { Lead, OwnerIntel, PipelineStatus } from "@/data/sample";
-import { getLeadById, saveLead } from "@/db/leads-repo";
+import { deleteLead, getLeadById, saveLead } from "@/db/leads-repo";
 import { heatColor, statusColor } from "@/lib/tactical";
 import { useDealStore } from "@/store/deal";
 
@@ -121,6 +121,20 @@ export default function TargetDossierScreen() {
     const updated = { ...lead, status: s };
     setLead(updated);
     await saveLead(updated);
+  };
+
+  const removeLead = () => {
+    Alert.alert("Delete target?", `Permanently remove ${lead.address} and its intel.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          await deleteLead(lead.id);
+          router.back();
+        },
+      },
+    ]);
   };
 
   const startEnrich = () => {
@@ -380,6 +394,12 @@ export default function TargetDossierScreen() {
             ))}
           </View>
         </View>
+
+        <Pressable onPress={removeLead} style={{ alignItems: "center", paddingVertical: 12, marginTop: 4 }}>
+          <Ui size={9} weight="semi" spacing={1} color={Tactical.status.red}>
+            ✕ DELETE TARGET
+          </Ui>
+        </Pressable>
       </ScrollView>
 
       <ActionBar>

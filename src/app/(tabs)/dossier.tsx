@@ -1,11 +1,11 @@
 import { type Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 
 import { IconButton, Mono, ScreenHeader, ScreenShell, TopBar, Ui } from "@/components/tactical";
 import { Tactical, hairline } from "@/constants/theme";
 import type { DealStatus } from "@/data/sample";
-import { type DealRecord, listDeals, seedIfEmpty } from "@/db/deals-repo";
+import { type DealRecord, deleteDeal, listDeals, seedIfEmpty } from "@/db/deals-repo";
 import { formatPercent, formatUSD } from "@/lib/format";
 import { verdictColor, verdictGlyph } from "@/lib/tactical";
 
@@ -58,7 +58,7 @@ function MetricCell({ label, value, color = Tactical.text.heading }: { label: st
   );
 }
 
-function SavedCard({ record, onPress }: { record: DealRecord; onPress: () => void }) {
+function SavedCard({ record, onPress, onDelete }: { record: DealRecord; onPress: () => void; onDelete: () => void }) {
   const vc = verdictColor(record.verdict);
   const s = record.snapshot;
   const recycled = s.isFullyRecycled;
@@ -68,6 +68,7 @@ function SavedCard({ record, onPress }: { record: DealRecord; onPress: () => voi
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onDelete}
       style={({ pressed }) => ({
         backgroundColor: Tactical.bg.panel,
         borderWidth: 1,
@@ -132,6 +133,20 @@ export default function SavedDossierScreen() {
     }, []),
   );
 
+  const removeDeal = (id: string, address: string) => {
+    Alert.alert("Delete analysis?", `Remove the saved analysis for ${address}.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          await deleteDeal(id);
+          setDeals((d) => d.filter((x) => x.id !== id));
+        },
+      },
+    ]);
+  };
+
   return (
     <ScreenShell>
       <TopBar>
@@ -165,7 +180,12 @@ export default function SavedDossierScreen() {
           </View>
         ) : (
           deals.map((deal) => (
-            <SavedCard key={deal.id} record={deal} onPress={() => router.push(`/target/${deal.leadId ?? "TGT-0147"}`)} />
+            <SavedCard
+              key={deal.id}
+              record={deal}
+              onPress={() => router.push(`/target/${deal.leadId ?? "TGT-0147"}`)}
+              onDelete={() => removeDeal(deal.id, deal.address)}
+            />
           ))
         )}
       </ScrollView>

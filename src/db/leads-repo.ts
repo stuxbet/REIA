@@ -84,6 +84,11 @@ export async function saveLead(lead: Lead): Promise<void> {
   );
 }
 
+export async function deleteLead(id: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync("DELETE FROM leads WHERE id = ?", id);
+}
+
 export async function countLeads(): Promise<number> {
   const db = await getDb();
   const row = await db.getFirstAsync<{ n: number }>("SELECT COUNT(*) as n FROM leads");
