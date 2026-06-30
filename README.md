@@ -2,7 +2,7 @@
 
 An iOS app for **scouting real estate deals** and **underwriting them** with a fast, BRRRR-focused investment calculator.
 
-> Status: **Phase 1 complete.** Tested BRRRR engine + SQLite-persistent calculator on a dark "tactical" UI (Expo SDK 56 · Expo Router · TypeScript), running in Expo Go. **Phase 2 (driving-for-dollars persistence) in progress.** See [`docs/06-implementation-plan.md`](docs/06-implementation-plan.md).
+> Status: **Phases 1–2 Expo Go-complete.** Tested BRRRR engine + SQLite-persistent calculator, plus the full driving-for-dollars loop (capture with real GPS + photos → persist → pipeline → outreach) on a dark "tactical" UI (Expo SDK 56 · Expo Router · TypeScript). Remaining: the real map + App Store ship, both gated on a one-time dev build. See [`docs/06-implementation-plan.md`](docs/06-implementation-plan.md).
 
 ---
 
