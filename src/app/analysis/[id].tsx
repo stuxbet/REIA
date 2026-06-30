@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, Share, View } from "react-native";
 
 import { computeBrrrr, evaluateBuyBox, type MetricStatus } from "@/calc/brrrr";
 import { type BrrrrInputs } from "@/calc/types";
@@ -152,6 +152,18 @@ export default function AnalysisScreen() {
     { label: "REHAB", shift: "±20%", lo: stress({ rehabBudget: inp.rehabBudget * 0.8 }), hi: stress({ rehabBudget: inp.rehabBudget * 1.2 }) },
   ];
 
+  const shareSummary = () => {
+    void Share.share({
+      message: [
+        `${address} — BRRRR · ${ev.verdict}`,
+        `Cash left in deal: ${r.isFullyRecycled ? "♾ fully recycled" : formatUSD(r.cashLeftInDeal)}`,
+        `Cash flow ${formatUSD(Math.round(r.cashFlowMonthly))}/mo · CoC ${r.cashOnCash === null ? "♾" : formatPercent(r.cashOnCash)} · DSCR ${r.dscr.toFixed(2)}`,
+        `Cap ${formatPercent(r.capRate)} · Equity ${formatUSD(r.equityCaptured)} · All-in ${formatUSD(r.allInCost)}`,
+        `— REIA`,
+      ].join("\n"),
+    });
+  };
+
   return (
     <ScreenShell>
       <TopBar>
@@ -284,7 +296,7 @@ export default function AnalysisScreen() {
           }}
           full
         />
-        <IconButton onPress={() => {}} size={48}>
+        <IconButton onPress={shareSummary} size={48}>
           <Ui size={15} color={Tactical.text.secondary}>
             ⤴
           </Ui>
