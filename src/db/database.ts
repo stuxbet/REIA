@@ -21,6 +21,24 @@ export function getDb(): Promise<SQLite.SQLiteDatabase> {
           createdAt INTEGER NOT NULL,
           updatedAt INTEGER NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS leads (
+          id TEXT PRIMARY KEY NOT NULL,
+          address TEXT NOT NULL,
+          city TEXT NOT NULL,
+          lat REAL NOT NULL,
+          lng REAL NOT NULL,
+          distanceMi REAL NOT NULL,
+          heat TEXT NOT NULL,
+          motivationScore INTEGER NOT NULL,
+          status TEXT NOT NULL,
+          distressTags TEXT NOT NULL,
+          flags TEXT NOT NULL,
+          photos INTEGER NOT NULL,
+          owner TEXT,
+          note TEXT,
+          createdAt INTEGER NOT NULL,
+          updatedAt INTEGER NOT NULL
+        );
       `);
       return db;
     });
