@@ -17,7 +17,8 @@ The build-level companion to [`05-roadmap.md`](05-roadmap.md). The roadmap says 
 - **Phase 0 — Foundation: ✅ done.** Expo SDK 56 + Router + strict TS, module structure, Jest; on GitHub ([stuxbet/REIA](https://github.com/stuxbet/REIA)).
 - **Phase 1 — Calculator: ✅ done** (except the user-gated App Store ship). Tested BRRRR engine; UNDERWRITE wired live; SQLite-persisted saved deals; editable inputs; persisted buy-box + Settings screen; per-metric formula reveal. Runs in Expo Go.
 - **"REIA Tactical" frontend leapt ahead of the roadmap:** all 8 v1 screens exist as UI (dark tactical theme). So the _calculator_ screens (UNDERWRITE/VERDICT/DOSSIER) are real + persistent; the _D4D_ screens (RECON/CAPTURE/TARGETS/TARGET DOSSIER/OUTREACH) currently render **sample data** — except OUTREACH, whose native handoff is already real.
-- **Phase 2 — Driving for Dollars: ✅ Expo Go-complete.** Leads persist; CAPTURE drops a real GPS pin, reverse-geocodes the address, and attaches real photos; TARGETS/RECON/DOSSIER read real leads; lead status-pipeline editing; manual owner/tax enrichment; lead→calculator bridge; OUTREACH template library + printable-letter export. **Only the real map (`react-native-maps`) remains — gated on a one-time dev build.**
+- **Phase 2 — Driving for Dollars: ✅ Expo Go-complete.** Leads persist; CAPTURE drops a real GPS pin, reverse-geocodes the address, and attaches real photos; TARGETS/RECON/DOSSIER read real leads; lead status-pipeline editing; owner/tax enrichment (manual **+ explicit RentCast pull via the self-hosted VPS backend in `/server`**); lead→calculator bridge; OUTREACH template library + printable-letter export. **Only the real map (`react-native-maps`) remains — gated on a one-time dev build.**
+- **Backend = the user's own VPS** (`/server`, Node/Hono, Dockerized), **not Supabase**. Route tracking is dropped.
 - Remaining Phase 1 step (user-gated): `eas build -p ios` → TestFlight → App Store (needs your Apple Developer account).
 
 ## Critical path (the spine)
@@ -114,9 +115,10 @@ Everything gates on two things: a proven Windows→TestFlight pipeline (Phase 0)
 - [x] Channel handoff via `expo-linking` (`mailto:`/`sms:`/`tel:`) + merged message with fields — **no backend send**.
 - [x] Switchable template library (3 templates, real `[OWNER]`/`[PROP]` merge fields from the lead) + `expo-print` printable-letter export.
 
-### 2.7 — Enrich
-- [x] **Manual-entry** owner/tax editor in TARGET DOSSIER (owner, mailing, last sale, assessed, tax status, occupancy); persisted; auto-computes the absentee flag (mailing ≠ site).
-- [ ] **(M)** Supabase Edge Function proxying RentCast/ATTOM for *auto*-enrichment (deferred / optional backend).
+### 2.7 — Enrich ✅
+- [x] **Manual-entry** owner/tax editor in TARGET DOSSIER; persisted; auto-computes the absentee flag (mailing ≠ site).
+- [x] **Self-hosted VPS backend** (`/server` — Node/Hono, Dockerized) proxying **RentCast** with the key server-side; **explicit, confirmed "PULL RENTCAST · 1 REQ" button** in TARGET DOSSIER (never auto-fetches — protects the 50/mo free quota). **Not Supabase.**
+- Setup: deploy `/server` to the VPS with `RENTCAST_API_KEY`, set `EXPO_PUBLIC_API_URL` in the app's `.env`.
 
 **Deliverable:** capture a property → it persists → appears in TARGETS / RECON / DOSSIER → underwrite it → reach out from your own apps.
 **Validation:** a captured lead survives an app restart; TARGETS filters work; underwrite opens pre-filled from a lead.
