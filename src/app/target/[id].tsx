@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 
 import {
@@ -20,7 +20,8 @@ import {
   Ui,
 } from "@/components/tactical";
 import { Tactical, hairline } from "@/constants/theme";
-import { getLead, LEADS } from "@/data/sample";
+import type { Lead } from "@/data/sample";
+import { getLeadById } from "@/db/leads-repo";
 import { heatColor } from "@/lib/tactical";
 
 const RED = Tactical.status.red;
@@ -61,7 +62,34 @@ function IntelRow({ label, value, valueColor = Tactical.text.primary, bold }: { 
 export default function TargetDossierScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const lead = getLead(id) ?? LEADS[0];
+  const [lead, setLead] = useState<Lead | null>(null);
+
+  useEffect(() => {
+    let on = true;
+    (async () => {
+      const l = await getLeadById(id ?? "");
+      if (on) setLead(l);
+    })();
+    return () => {
+      on = false;
+    };
+  }, [id]);
+
+  if (!lead) {
+    return (
+      <ScreenShell>
+        <TopBar>
+          <ScreenHeader title="DOSSIER" titleSize={16} titleSpacing={2} left={<BackButton onPress={() => router.back()} />} sub={`ID // ${id ?? "—"}`} />
+        </TopBar>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Mono size={10} color={Tactical.text.dim} spacing={0.5}>
+            LOADING INTEL…
+          </Mono>
+        </View>
+      </ScreenShell>
+    );
+  }
+
   const owner = lead.owner;
   const c = heatColor(lead.heat);
 

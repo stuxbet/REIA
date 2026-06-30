@@ -1,4 +1,5 @@
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { type DimensionValue, Pressable, View } from "react-native";
 import Svg, { Circle, Ellipse, Line } from "react-native-svg";
 
@@ -19,7 +20,8 @@ import {
   Ui,
 } from "@/components/tactical";
 import { Tactical, hairline } from "@/constants/theme";
-import { LEADS } from "@/data/sample";
+import type { Lead } from "@/data/sample";
+import { listLeads, seedLeadsIfEmpty } from "@/db/leads-repo";
 import { heatColor } from "@/lib/tactical";
 
 const GREEN = Tactical.green.primary;
@@ -90,7 +92,7 @@ function Pin({ heat, absentee }: { heat: "HOT" | "WARM" | "COLD"; absentee?: boo
   );
 }
 
-function TargetRow({ lead, onPress }: { lead: (typeof LEADS)[number]; onPress: () => void }) {
+function TargetRow({ lead, onPress }: { lead: Lead; onPress: () => void }) {
   const c = heatColor(lead.heat);
   return (
     <Pressable
@@ -127,6 +129,22 @@ function TargetRow({ lead, onPress }: { lead: (typeof LEADS)[number]; onPress: (
 
 export default function ReconScreen() {
   const router = useRouter();
+  const [leads, setLeads] = useState<Lead[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let on = true;
+      (async () => {
+        await seedLeadsIfEmpty();
+        const rows = await listLeads();
+        if (on) setLeads(rows);
+      })();
+      return () => {
+        on = false;
+      };
+    }, []),
+  );
+
   return (
     <ScreenShell bg={Tactical.bg.deep}>
       <TopBar>
@@ -237,7 +255,7 @@ export default function ReconScreen() {
             SORT // HEAT ▾
           </Mono>
         </View>
-        {LEADS.slice(0, 2).map((lead) => (
+        {leads.slice(0, 2).map((lead) => (
           <TargetRow key={lead.id} lead={lead} onPress={() => router.push(`/target/${lead.id}`)} />
         ))}
         <ChamferButton
