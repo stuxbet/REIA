@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, View } from "react-native";
 
 import {
@@ -15,14 +15,11 @@ import {
   Ui,
 } from "@/components/tactical";
 import { Tactical, hairline } from "@/constants/theme";
+import type { Lead } from "@/data/sample";
+import { getLeadById } from "@/db/leads-repo";
 
 const GREEN = Tactical.green.primary;
 const AMBER = Tactical.status.amber;
-
-const OWNER = "R. HALE";
-const PROP = "1428 ELM AVE";
-const SUBJECT = `Interested in your property — ${PROP}`;
-const BODY = `Hi ${OWNER}, I'm a local investor interested in ${PROP}. I can offer a fast, as-is cash close on your timeline — no repairs, no agent fees. Would you be open to a brief call? — Marcus`;
 
 type Channel = "MAIL" | "SMS" | "CALL" | "LETTER";
 const CHANNELS: Channel[] = ["MAIL", "SMS", "CALL", "LETTER"];
@@ -32,6 +29,67 @@ const HANDOFF_LABEL: Record<Channel, string> = {
   CALL: "HANDOFF → PHONE ▸",
   LETTER: "EXPORT LETTER ▸",
 };
+const CAPTION: Record<Channel, string> = {
+  MAIL: "OPENS MAIL PRE-FILLED · SEND FROM YOUR ACCOUNT",
+  SMS: "OPENS MESSAGES PRE-FILLED · SEND FROM YOUR NUMBER",
+  CALL: "OPENS PHONE · DIAL FROM YOUR DEVICE",
+  LETTER: "EXPORTS A PRINTABLE PDF YOU MAIL YOURSELF",
+};
+
+interface Template {
+  id: string;
+  label: string;
+  subject: string;
+  body: string;
+}
+const TEMPLATES: Template[] = [
+  {
+    id: "cash-absentee",
+    label: "CASH OFFER — ABSENTEE",
+    subject: "Interested in your property — [PROP]",
+    body: "Hi [OWNER], I'm a local investor interested in [PROP]. I can offer a fast, as-is cash close on your timeline — no repairs, no agent fees. Would you be open to a brief call? — Marcus",
+  },
+  {
+    id: "as-is",
+    label: "AS-IS — QUICK CLOSE",
+    subject: "Quick as-is offer on [PROP]",
+    body: "Hi [OWNER], I buy houses as-is in your area and noticed [PROP]. No showings, no repairs — I cover closing costs and can close fast. Worth a quick conversation? — Marcus",
+  },
+  {
+    id: "rental",
+    label: "RENTAL — DIRECT",
+    subject: "Your property at [PROP]",
+    body: "Hi [OWNER], I'm a local buyer focused on properties like [PROP]. If you've ever considered selling, I can make a straightforward cash offer with a flexible timeline. Open to talking? — Marcus",
+  },
+];
+
+function merge(text: string, owner: string, prop: string) {
+  return text.replaceAll("[OWNER]", owner).replaceAll("[PROP]", prop);
+}
+
+/** Render a template body with [OWNER]/[PROP] merge fields filled + highlighted. */
+function MergedBody({ body, owner, prop }: { body: string; owner: string; prop: string }) {
+  const parts = body.split(/(\[OWNER\]|\[PROP\])/g);
+  return (
+    <Mono size={11} color={Tactical.text.secondary} style={{ lineHeight: 18 }}>
+      {parts.map((part, i) => {
+        if (part === "[OWNER]")
+          return (
+            <Mono key={i} size={11} color={GREEN}>
+              [{owner}]
+            </Mono>
+          );
+        if (part === "[PROP]")
+          return (
+            <Mono key={i} size={11} color={GREEN}>
+              [{prop}]
+            </Mono>
+          );
+        return part;
+      })}
+    </Mono>
+  );
+}
 
 function ChannelTile({ label, selected, onPress }: { label: Channel; selected: boolean; onPress: () => void }) {
   return (
@@ -56,15 +114,34 @@ function ChannelTile({ label, selected, onPress }: { label: Channel; selected: b
 export default function OutreachScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const [lead, setLead] = useState<Lead | null>(null);
   const [channel, setChannel] = useState<Channel>("MAIL");
+  const [tplIdx, setTplIdx] = useState(0);
+
+  useEffect(() => {
+    let on = true;
+    (async () => {
+      const l = await getLeadById(id ?? "");
+      if (on) setLead(l);
+    })();
+    return () => {
+      on = false;
+    };
+  }, [id]);
+
+  const owner = lead?.owner?.name ?? "PROPERTY OWNER";
+  const prop = lead?.address ?? "YOUR PROPERTY";
+  const tpl = TEMPLATES[tplIdx];
+  const subject = merge(tpl.subject, owner, prop);
+  const body = merge(tpl.body, owner, prop);
 
   const handoff = () => {
-    const subject = encodeURIComponent(SUBJECT);
-    const body = encodeURIComponent(BODY);
-    if (channel === "MAIL") Linking.openURL(`mailto:?subject=${subject}&body=${body}`);
-    else if (channel === "SMS") Linking.openURL(`sms:&body=${body}`);
+    const s = encodeURIComponent(subject);
+    const b = encodeURIComponent(body);
+    if (channel === "MAIL") Linking.openURL(`mailto:?subject=${s}&body=${b}`);
+    else if (channel === "SMS") Linking.openURL(`sms:&body=${b}`);
     else if (channel === "CALL") Linking.openURL("tel:");
-    // LETTER → would generate a printable PDF (expo-print) in a later phase.
+    // LETTER → printable PDF (expo-print) wired in the next step.
   };
 
   return (
@@ -75,7 +152,7 @@ export default function OutreachScreen() {
           titleSize={16}
           titleSpacing={2}
           left={<BackButton onPress={() => router.back()} />}
-          sub={`${id ?? "TGT-0147"} · ESTATE OF R. HALE`}
+          sub={`${id ?? "TGT-0147"} · ${owner}`}
         />
       </TopBar>
 
@@ -108,14 +185,28 @@ export default function OutreachScreen() {
         {/* TEMPLATE */}
         <View style={{ gap: 8 }}>
           <SectionLabel>TEMPLATE</SectionLabel>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: Tactical.bg.panel2, borderWidth: 1, borderColor: hairline(0.12), paddingHorizontal: 12, paddingVertical: 11 }}>
-            <Mono size={11} color={Tactical.text.primary}>
-              CASH OFFER — ABSENTEE
-            </Mono>
-            <Ui size={11} weight="bold" color={Tactical.text.muted}>
-              ▾
-            </Ui>
-          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7 }}>
+            {TEMPLATES.map((t, i) => {
+              const active = i === tplIdx;
+              return (
+                <Pressable
+                  key={t.id}
+                  onPress={() => setTplIdx(i)}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 7,
+                    borderWidth: 1,
+                    borderColor: active ? GREEN : hairline(0.16),
+                    backgroundColor: active ? "rgba(124,255,155,0.10)" : Tactical.bg.raised,
+                  }}
+                >
+                  <Ui size={9} weight="semi" spacing={0.5} color={active ? GREEN : Tactical.text.muted}>
+                    {t.label}
+                  </Ui>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {/* MESSAGE · MERGED */}
@@ -128,14 +219,10 @@ export default function OutreachScreen() {
           </View>
           <View style={{ backgroundColor: Tactical.bg.deep, borderWidth: 1, borderColor: hairline(0.14), padding: 12, gap: 10 }}>
             <Mono size={10} color={Tactical.text.muted}>
-              SUBJ: {SUBJECT}
+              SUBJ: {subject}
             </Mono>
             <View style={{ height: 1, backgroundColor: hairline(0.1) }} />
-            <Mono size={11} color={Tactical.text.secondary} style={{ lineHeight: 18 }}>
-              Hi <Mono size={11} color={GREEN}>[{OWNER}]</Mono>, I&apos;m a local investor interested in{" "}
-              <Mono size={11} color={GREEN}>[{PROP}]</Mono>. I can offer a fast, as-is cash close on your timeline — no
-              repairs, no agent fees. Would you be open to a brief call? — Marcus
-            </Mono>
+            <MergedBody body={tpl.body} owner={owner} prop={prop} />
           </View>
         </View>
       </ScrollView>
@@ -143,7 +230,7 @@ export default function OutreachScreen() {
       <ActionBar style={{ flexDirection: "column", alignItems: "stretch", gap: 6 }}>
         <ChamferButton label={HANDOFF_LABEL[channel]} onPress={handoff} full />
         <Mono size={8} color={Tactical.text.faint} style={{ textAlign: "center" }}>
-          OPENS MAIL PRE-FILLED · SEND FROM YOUR ACCOUNT
+          {CAPTION[channel]}
         </Mono>
       </ActionBar>
     </ScreenShell>
