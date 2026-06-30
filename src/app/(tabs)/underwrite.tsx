@@ -277,6 +277,12 @@ export default function UnderwriteScreen() {
             <InputCell field="arv" label="ARV" step={5000} kind="money" emphasize />
             <InputCell field="seventyRulePct" label="70% RULE" step={0.05} kind="ratio" />
           </Row>
+          {strategy === "FLIP" ? (
+            <Row>
+              <InputCell field="sellingCostsPct" label="SELL COSTS" step={0.005} kind="percent" decimals={1} mode="%" />
+              <View style={{ flex: 1 }} />
+            </Row>
+          ) : null}
           <Callout danger={purchaseOver > 0}>
             <Mono size={10} color={Tactical.text.secondary}>
               MAO ={" "}
@@ -292,38 +298,44 @@ export default function UnderwriteScreen() {
           </Callout>
         </Module>
 
-        <Module label="C · REFINANCE">
-          <Row>
-            <InputCell field="refiLtv" label="REFI LTV" step={0.05} kind="percent" decimals={0} mode="%" />
-            <InputCell field="refiRate" label="REFI RATE" step={0.0025} kind="percent" decimals={1} />
-          </Row>
-          <Callout>
-            <Mono size={10} color={Tactical.text.secondary}>
-              NEW LOAN{" "}
-              <Mono size={10} weight="bold" color={Tactical.text.heading}>
-                {formatUSD(r.newLoanAmount)}
-              </Mono>
-            </Mono>
-            <Mono size={10} color={Tactical.text.muted}>
-              · PMT {formatUSD(Math.round(r.newMortgageMonthly))}/MO · {inp.refiTermYears}YR
-            </Mono>
-          </Callout>
-        </Module>
+        {strategy !== "FLIP" ? (
+          <>
+            <Module label={strategy === "LTR" ? "C · FINANCING" : "C · REFINANCE"}>
+              <Row>
+                <InputCell field="refiLtv" label="LTV" step={0.05} kind="percent" decimals={0} mode="%" />
+                <InputCell field="refiRate" label="RATE" step={0.0025} kind="percent" decimals={1} />
+              </Row>
+              {strategy === "BRRRR" ? (
+                <Callout>
+                  <Mono size={10} color={Tactical.text.secondary}>
+                    NEW LOAN{" "}
+                    <Mono size={10} weight="bold" color={Tactical.text.heading}>
+                      {formatUSD(r.newLoanAmount)}
+                    </Mono>
+                  </Mono>
+                  <Mono size={10} color={Tactical.text.muted}>
+                    · PMT {formatUSD(Math.round(r.newMortgageMonthly))}/MO · {inp.refiTermYears}YR
+                  </Mono>
+                </Callout>
+              ) : null}
+            </Module>
 
-        <Module label="D · RENTAL OPS">
-          <Row>
-            <InputCell field="grossMonthlyRent" label="RENT/MO" step={50} kind="money" />
-            <InputCell field="vacancyPct" label="VACANCY" step={0.01} kind="percent" decimals={0} mode="%" />
-          </Row>
-          <Row>
-            <InputCell field="managementPct" label="MGMT" step={0.01} kind="percent" decimals={0} mode="%" />
-            <InputCell field="maintenancePct" label="MAINT" step={0.01} kind="percent" decimals={0} mode="%" />
-          </Row>
-          <Row>
-            <InputCell field="capexReservePct" label="CAPEX" step={0.01} kind="percent" decimals={0} mode="%" />
-            <InputCell field="propertyTaxesMonthly" label="TAXES/MO" step={25} kind="money" />
-          </Row>
-        </Module>
+            <Module label="D · RENTAL OPS">
+              <Row>
+                <InputCell field="grossMonthlyRent" label="RENT/MO" step={50} kind="money" />
+                <InputCell field="vacancyPct" label="VACANCY" step={0.01} kind="percent" decimals={0} mode="%" />
+              </Row>
+              <Row>
+                <InputCell field="managementPct" label="MGMT" step={0.01} kind="percent" decimals={0} mode="%" />
+                <InputCell field="maintenancePct" label="MAINT" step={0.01} kind="percent" decimals={0} mode="%" />
+              </Row>
+              <Row>
+                <InputCell field="capexReservePct" label="CAPEX" step={0.01} kind="percent" decimals={0} mode="%" />
+                <InputCell field="propertyTaxesMonthly" label="TAXES/MO" step={25} kind="money" />
+              </Row>
+            </Module>
+          </>
+        ) : null}
 
         {strategy === "BRRRR" ? (
           <ChamferButton label="RUN ANALYSIS ▸ VERDICT" onPress={() => router.push(`/analysis/${leadId ?? "TGT-0147"}`)} />
