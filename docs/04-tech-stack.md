@@ -36,12 +36,12 @@ The only mainstream toolchain that lets you **write, device-test, and ship to th
 | **Camera & photos** | **expo-camera** / **expo-image-picker** + **expo-file-system** | Capture and store lead photos locally |
 | **Outreach handoff** | **expo-linking** (`mailto:`/`sms:`/`tel:`) + React Native **Share** API + **expo-print** | Compose in-app, send via the user's own Mail/Messages/Phone or export a printable letter — **no backend send path** |
 | **Charts** | **Victory Native** or **react-native-svg** | Sensitivity grids, trend overlays |
-| **Backend (optional)** | **Supabase** (Postgres + Auth + Edge Functions) | Generous free tier; only when you add sync/scouting |
-| **Data ingestion** | **Supabase Edge Functions** (or small Node service) | Server-side calls to RentCast/HUD; keeps API keys off-device, enables caching |
+| **Backend (optional)** | **Self-hosted service on your VPS** (Node + Hono, Dockerized — `/server`) | Owns the RentCast/enrichment proxy; no managed BaaS (Supabase explicitly rejected) |
+| **Data ingestion** | **VPS backend** (`/server`) | Server-side calls to RentCast; key stays off-device, behind a shared secret |
 | **Testing** | **Jest** + **React Native Testing Library** | Calculator gets snapshot tests vs. the worked example |
 | **Tooling** | VS Code, Node LTS, pnpm, Expo CLI, EAS CLI, Expo Go | Standard RN dev loop on Windows |
 
-> **Local-first stance:** the MVP needs **no backend at all** — calculator + SQLite is fully functional offline. Add Supabase only when you introduce the deal feed (Epic 3) or cloud sync (Epic 7). This matches the "free/low-cost" decision: you pay for nothing until you need scouting data.
+> **Local-first stance:** the MVP needs **no backend at all** — calculator + SQLite is fully functional offline. Stand up the VPS backend (`/server`) only when you need server-side data (enrichment, the deal feed) or cloud sync. This matches the "free/low-cost" decision: you pay for nothing until you need scouting data.
 
 ## Alternatives considered
 
@@ -59,7 +59,7 @@ The only mainstream toolchain that lets you **write, device-test, and ship to th
 | --- | --- |
 | Expo + EAS | Free tier covers low build volume; paid tiers optional later |
 | Apple Developer Program | **$99/year** (required to ship — unavoidable) |
-| Supabase | Free tier (add only when needed) |
+| VPS backend (`/server`) | Self-hosted on your existing VPS; RentCast free tier |
 | RentCast / HUD / Census / Apple Maps | Free tiers / free (see [`01-deal-scouting.md`](01-deal-scouting.md)) |
 | **Total to start** | **~$99/year** until you scale data usage |
 

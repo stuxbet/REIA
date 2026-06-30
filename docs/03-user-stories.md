@@ -84,8 +84,7 @@ The v1 scouting pillar. Stories follow the funnel in [`01-deal-scouting.md`](01-
 **3.8 [v1]** As Marcus, I want to jump from a lead into the BRRRR calculator with an estimated ARV pre-filled, so that I can underwrite a find on the spot.
 - AC: Calculator opens linked to the lead; the saved deal references the lead.
 
-**3.9 [Later]** As Marcus, I want a GPS breadcrumb trail of my drive, so that I never re-cover the same streets.
-- AC: Background route recording with a visible trail. *(Deferred — needs background-location permission.)*
+**3.9 [Dropped]** GPS breadcrumb trail / route tracking — **cut from scope** (decision 2026-06-29). Not building it.
 
 ## Epic 4 — On-market deal feed (deferred)
 

@@ -32,7 +32,7 @@ Sequenced by dependency and value, not calendar dates (solo-dev timing varies). 
 **Goal:** find and work off-market leads in the field — the v1 scouting pillar ([`01-deal-scouting.md`](01-deal-scouting.md)). Build in slices:
 - **2a Capture (local-first):** visual map (react-native-maps), one-tap manual pin (current location / map tap / address search), camera photos, notes, distress tags; offline capture + sync.
 - **2b Identify + organize:** reverse-geocode pins to addresses (expo-location); dedupe; lead lists + status pipeline; map and list views; filter/sort.
-- **2c Enrich:** stand up a Supabase Edge Function to proxy owner/tax data (RentCast/ATTOM free tiers, keys off-device); manual entry fills gaps; absentee flag + simple motivation score.
+- **2c Enrich:** the VPS backend (`/server`, Node/Hono) proxies owner/tax data (RentCast free tier; key off-device behind a shared secret); manual entry fills gaps; absentee flag + simple motivation score.
 - **2d Outreach (handoff):** templated message → `mailto:`/`sms:`/`tel:`/share sheet/printable letter. **No backend send.**
 - **2e Bridge:** jump from a lead into the BRRRR calculator with an estimated ARV.
 
@@ -55,13 +55,12 @@ Sequenced by dependency and value, not calendar dates (solo-dev timing varies). 
 
 ## Phase 5 — Depth & polish
 **Goal:** make it sticky and broaden the engine.
-- **Route tracking (GPS breadcrumb trail)** for D4D — the signature upgrade deferred from v1; introduces background-location permission + App Store review justification.
 - Sensitivity analysis (ARV/rate/rehab grids).
 - Long-term-rental and fix-&-flip modes on the same engine.
-- Optional account + cloud sync (Supabase Auth) — additive, app stays local-first.
+- Optional account + cloud sync via the VPS backend — additive, app stays local-first.
 - New-deal alerts/notifications.
 
-**Exit:** a multi-strategy analyzer with route-tracked scouting, sync, and alerts.
+**Exit:** a multi-strategy analyzer with sync and alerts.
 
 ---
 

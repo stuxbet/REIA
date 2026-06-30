@@ -141,10 +141,9 @@ Everything gates on two things: a proven Windows→TestFlight pipeline (Phase 0)
 
 ## Phase 5 — Depth & polish (deferred)
 
-- [ ] **(L)** **Route tracking** (GPS breadcrumb trail) — introduces background-location permission + App Store review justification.
 - [ ] **(M)** Sensitivity analysis (ARV ±10% / rate ±1% / rehab ±20% grid).
 - [ ] **(M)** Long-term-rental and fix-&-flip modes on the same engine.
-- [ ] **(L)** Optional account + cloud sync (Supabase Auth) — additive; app stays local-first.
+- [ ] **(L)** Optional account + cloud sync via the VPS backend — additive; app stays local-first.
 
 ---
 
@@ -154,7 +153,7 @@ Everything gates on two things: a proven Windows→TestFlight pipeline (Phase 0)
 - **Releases.** Use EAS build profiles (`development` / `preview` / `production`). Consider **EAS Update** (OTA) for JS-only fixes between store submissions. Bump version + build number per submission.
 - **Observability.** Add lightweight error reporting (e.g., Sentry) before/at first ship so production crashes are visible.
 - **Data & privacy.** Local-first means minimal privacy surface; once enrichment (2c) and any account (5) land, document data handling and update the App Store privacy questionnaire. Add the in-app outreach-compliance reminder noted in [`01-deal-scouting.md`](01-deal-scouting.md).
-- **Secrets.** No API keys in the app bundle — they live in the Supabase Edge Function from 2c onward.
+- **Secrets.** No API keys in the app bundle — they live in the VPS backend (`/server`, env vars) behind a shared secret.
 
 ## Phase definition of done
 
@@ -165,7 +164,7 @@ Everything gates on two things: a proven Windows→TestFlight pipeline (Phase 0)
 | 2 | Full D4D funnel usable end-to-end offline-first; outreach via native handoff |
 | 3 | Ranked on-market feed openable into the calculator |
 | 4 | Heatmap + market overlays on the map |
-| 5 | Route tracking + sensitivity + multi-strategy + optional sync |
+| 5 | Sensitivity + multi-strategy modes + optional sync |
 
 ## Start here
 

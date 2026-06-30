@@ -21,7 +21,7 @@ These came out of the initial concept conversation (2026-06-29) and drive every 
 | Target platform | **iPhone only** | No Android/web parity work in v1 |
 | Build machine | **Windows** | Rules out local Xcode → drives the stack choice |
 | Primary strategy | **BRRRR** | Calculator is built around rehab → refi → cash-out |
-| Scouting approach | **Driving for dollars** (full funnel; outreach via handoff, no route tracking yet) | Off-market deals on free phone capabilities; see scouting doc |
+| Scouting approach | **Driving for dollars** (full funnel; outreach via handoff; no route tracking) | Off-market deals on free phone capabilities; see scouting doc |
 | Deal data (v1) | **Free / low-cost APIs** | Scouting starts with free tiers + public data; owner enrichment is the cost pressure point |
 
 ## Recommended stack (headline)

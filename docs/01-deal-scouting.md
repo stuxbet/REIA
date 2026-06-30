@@ -10,7 +10,7 @@ _Last updated: 2026-06-29_
 | --- | --- |
 | Funnel depth | **Full pipeline:** capture → identify → enrich → organize → outreach |
 | Visual map | **Yes** — pins shown on a real map (Apple Maps base, free on iOS) |
-| Route tracking (GPS breadcrumb trail) | **Deferred** — not in v1; avoids background-location permission + extra App Store review. Natural first post-v1 add. |
+| Route tracking (GPS breadcrumb trail) | **Dropped** — not building it (decision 2026-06-29). |
 | Pin capture | **Manual** — tap to drop at current location, tap the map, or search an address |
 | Outreach sending | **Handoff only** — app composes; user sends via their own Mail/Messages/Phone. **Nothing routes through our servers.** |
 
@@ -79,7 +79,7 @@ Because the **user** sends every message through their own apps, we avoid being 
 
 ## Deferred / future angles (not v1)
 
-- **Route tracking (GPS breadcrumb trail)** — the signature upgrade to D4D; deferred only for the background-location/App-Store complexity. First thing to add post-v1.
+- **Route tracking (GPS breadcrumb trail)** — **dropped** (not building it).
 - **On-market auto-underwriting ("deal feed")** — pull listings and auto-run the BRRRR model against a buy box. Strong complement once D4D ships; reuses the same calculator.
 - **Market heatmaps** — rent-to-price overlays to aim drives at the right neighborhoods.
 - **Social media** — still out: Facebook/Nextdoor are API-locked and scraping is ToS/legal risk. Revisit only as public-source monitoring feeding the deferred deal feed.

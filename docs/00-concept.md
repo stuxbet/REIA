@@ -38,7 +38,7 @@ The v1 scouting focus is **driving for dollars (D4D)**: finding off-market distr
 - **Outreach** — compose a message, then hand off to the user's own Mail/Messages/Phone; **nothing routes through our servers**.
 - **→ Underwrite** — jump from any lead straight into the BRRRR calculator.
 
-Deferred (not v1): GPS route tracking, on-market auto-underwriting (deal feed), market heatmaps. See scouting doc for why.
+Deferred (not v1): on-market auto-underwriting (deal feed), market heatmaps. Route tracking is dropped entirely. See scouting doc for why.
 
 ### Pillar 2 — Deal Calculator
 A BRRRR-first underwriting engine (detailed in [`02-calculator-spec.md`](02-calculator-spec.md)) that takes a property's numbers and returns the metrics that decide the deal: all-in cost, ARV, refinance proceeds, **cash left in deal**, post-refi cash flow, cash-on-cash, cap rate, DSCR, and the 70% rule check.
@@ -53,7 +53,7 @@ A BRRRR-first underwriting engine (detailed in [`02-calculator-spec.md`](02-calc
 
 **Explicitly NOT in v1 (non-goals)**
 - Android or web app.
-- **GPS route tracking** (background-location breadcrumb trail) — deferred to post-v1.
+- **GPS route tracking** (background-location breadcrumb trail) — **dropped** (not building it).
 - **On-market deal feed / market heatmaps** — deferred; D4D is the v1 scouting focus.
 - **The app sending any outreach itself** — no email/SMS/mail-print service; outreach is composed then handed off to the user's apps (the user is always the sender).
 - Paid/premium MLS data feeds and paid skip tracing (owner phone/email).
