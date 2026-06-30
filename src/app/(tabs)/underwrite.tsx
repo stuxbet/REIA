@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
 
 import { computeBrrrr, evaluateBuyBox } from "@/calc/brrrr";
+import { computeFlip, computeLtr } from "@/calc/strategies";
 import { type BrrrrInputs } from "@/calc/types";
 import {
   ChamferButton,
@@ -105,17 +106,19 @@ function InputCell({
   );
 }
 
-function Strategy() {
+type Strat = "BRRRR" | "FLIP" | "LTR";
+
+function Strategy({ value, onChange }: { value: Strat; onChange: (s: Strat) => void }) {
   return (
     <View style={{ flexDirection: "row", borderWidth: 1, borderColor: hairline(0.16), alignSelf: "flex-start" }}>
       {(["BRRRR", "FLIP", "LTR"] as const).map((s) => {
-        const active = s === "BRRRR";
+        const active = s === value;
         return (
-          <View key={s} style={{ paddingHorizontal: 10, paddingVertical: 5, backgroundColor: active ? "rgba(124,255,155,0.12)" : "transparent" }}>
+          <Pressable key={s} onPress={() => onChange(s)} style={{ paddingHorizontal: 10, paddingVertical: 5, backgroundColor: active ? "rgba(124,255,155,0.12)" : "transparent" }}>
             <Ui size={9} weight="bold" spacing={1} color={active ? GREEN : Tactical.text.dim}>
               {s}
             </Ui>
-          </View>
+          </Pressable>
         );
       })}
     </View>
@@ -157,6 +160,53 @@ export default function UnderwriteScreen() {
   const mc = (s: "pass" | "fail" | "watch") => (s === "pass" ? GREEN : s === "watch" ? Tactical.status.amber : Tactical.status.red);
   const purchaseOver = inp.purchasePrice - r.mao;
 
+  const [strategy, setStrategy] = useState<Strat>("BRRRR");
+  const flip = computeFlip(inp);
+  const ltr = computeLtr(inp);
+
+  const readout =
+    strategy === "FLIP"
+      ? {
+          label: "★ NET PROFIT",
+          value: formatUSD(Math.round(flip.netProfit)),
+          valueColor: flip.netProfit >= 0 ? GREEN : Tactical.status.red,
+          accent: flip.netProfit >= 0 ? GREEN : Tactical.status.red,
+          chip: flip.netProfit >= 0 ? "PROFIT" : "LOSS",
+          target: `SALE ${formatUSD(Math.round(flip.saleProceeds))}`,
+          metrics: [
+            { label: "ROI", value: formatPercent(flip.roi), color: flip.roi >= 0.2 ? GREEN : Tactical.status.amber },
+            { label: "ANN ROI", value: formatPercent(flip.annualizedRoi), color: GREEN },
+            { label: "ALL-IN", value: formatUSD(Math.round(flip.allInCost)), color: Tactical.text.heading },
+          ],
+        }
+      : strategy === "LTR"
+        ? {
+            label: "★ CASH FLOW / MO",
+            value: formatUSD(Math.round(ltr.cashFlowMonthly)),
+            valueColor: ltr.cashFlowMonthly >= 0 ? GREEN : Tactical.status.red,
+            accent: ltr.cashFlowMonthly >= 0 ? GREEN : Tactical.status.red,
+            chip: ltr.cashFlowMonthly >= 0 ? "CASH-FLOWS" : "NEGATIVE",
+            target: `DOWN ${formatUSD(Math.round(ltr.downPayment))}`,
+            metrics: [
+              { label: "COC", value: ltr.cashOnCash === null ? "♾" : formatPercent(ltr.cashOnCash), color: GREEN },
+              { label: "CAP", value: formatPercent(ltr.capRate), color: GREEN },
+              { label: "DSCR", value: ltr.dscr.toFixed(2), color: ltr.dscr >= 1.2 ? GREEN : Tactical.status.amber },
+            ],
+          }
+        : {
+            label: "★ CASH LEFT IN DEAL",
+            value: r.isFullyRecycled ? "♾" : formatUSD(r.cashLeftInDeal),
+            valueColor: heroColor,
+            accent: vc,
+            chip: ev.verdict,
+            target: `TGT ≤ ${formatUSD(buyBox.maxCashLeftIn)}`,
+            metrics: [
+              { label: "CASH FLOW", value: `${formatUSD(Math.round(r.cashFlowMonthly))}/MO`, color: mc(ev.cashFlow) },
+              { label: "COC", value: r.cashOnCash === null ? "♾" : formatPercent(r.cashOnCash), color: ev.cashOnCash === "pass" ? GREEN : Tactical.status.amber },
+              { label: "DSCR", value: r.dscr.toFixed(2), color: mc(ev.dscr) },
+            ],
+          };
+
   return (
     <ScreenShell>
       <TopBar>
@@ -174,35 +224,35 @@ export default function UnderwriteScreen() {
           }
         />
         <View style={{ marginTop: 10 }}>
-          <Strategy />
+          <Strategy value={strategy} onChange={setStrategy} />
         </View>
       </TopBar>
 
       {/* LIVE READOUT */}
-      <View style={{ margin: 14, marginBottom: 0, position: "relative", backgroundColor: Tactical.bg.panel, borderWidth: 1, borderColor: vc, padding: 14 }}>
-        <CornerBrackets color={vc} size={13} inset={5} />
+      <View style={{ margin: 14, marginBottom: 0, position: "relative", backgroundColor: Tactical.bg.panel, borderWidth: 1, borderColor: readout.accent, padding: 14 }}>
+        <CornerBrackets color={readout.accent} size={13} inset={5} />
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Ui size={9} weight="semi" spacing={1.5} color={Tactical.text.secondary}>
-            ★ CASH LEFT IN DEAL
+            {readout.label}
           </Ui>
-          <View style={{ borderWidth: 1, borderColor: vc, paddingHorizontal: 6, paddingVertical: 2 }}>
-            <Ui size={8} weight="bold" spacing={1} color={vc}>
-              {ev.verdict}
+          <View style={{ borderWidth: 1, borderColor: readout.accent, paddingHorizontal: 6, paddingVertical: 2 }}>
+            <Ui size={8} weight="bold" spacing={1} color={readout.accent}>
+              {readout.chip}
             </Ui>
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, marginTop: 4 }}>
-          <Mono size={34} weight="xbold" color={heroColor} glow={heroColor}>
-            {r.isFullyRecycled ? "♾" : formatUSD(r.cashLeftInDeal)}
+          <Mono size={34} weight="xbold" color={readout.valueColor} glow={readout.valueColor}>
+            {readout.value}
           </Mono>
           <Mono size={9} color={Tactical.text.muted}>
-            TGT ≤ {formatUSD(buyBox.maxCashLeftIn)}
+            {readout.target}
           </Mono>
         </View>
         <View style={{ flexDirection: "row", gap: 14, marginTop: 10, borderTopWidth: 1, borderTopColor: hairline(0.1), paddingTop: 10 }}>
-          <ReadoutMetric label="CASH FLOW" value={`${formatUSD(Math.round(r.cashFlowMonthly))}/MO`} color={mc(ev.cashFlow)} />
-          <ReadoutMetric label="COC" value={r.cashOnCash === null ? "♾" : formatPercent(r.cashOnCash)} color={ev.cashOnCash === "pass" ? GREEN : Tactical.status.amber} />
-          <ReadoutMetric label="DSCR" value={r.dscr.toFixed(2)} color={mc(ev.dscr)} />
+          {readout.metrics.map((m) => (
+            <ReadoutMetric key={m.label} label={m.label} value={m.value} color={m.color} />
+          ))}
         </View>
       </View>
 
@@ -275,7 +325,9 @@ export default function UnderwriteScreen() {
           </Row>
         </Module>
 
-        <ChamferButton label="RUN ANALYSIS ▸ VERDICT" onPress={() => router.push(`/analysis/${leadId ?? "TGT-0147"}`)} />
+        {strategy === "BRRRR" ? (
+          <ChamferButton label="RUN ANALYSIS ▸ VERDICT" onPress={() => router.push(`/analysis/${leadId ?? "TGT-0147"}`)} />
+        ) : null}
       </ScrollView>
     </ScreenShell>
   );
