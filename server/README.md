@@ -17,15 +17,18 @@ npm run dev               # http://localhost:8787/health
 ```bash
 docker build -t reia-server ./server
 docker run -d --restart unless-stopped -p 8787:8787 \
-  -e RENTCAST_API_KEY=xxxxx reia-server
+  -e RENTCAST_API_KEY=xxxxx \
+  -e API_SHARED_SECRET=your-long-random-secret \
+  reia-server
 ```
 
-Then point the app at it (see `src/data/api.ts` in the app — `EXPO_PUBLIC_API_URL`).
+Then in the app's `.env`: `EXPO_PUBLIC_API_URL=<this host>` and
+`EXPO_PUBLIC_API_TOKEN=<same value as API_SHARED_SECRET>`.
 
 ## Endpoints
 
-- `GET /health` — liveness + whether the RentCast key is configured.
-- `GET /enrich?address=...` — owner/tax enrichment for a property _(next)_.
+- `GET /health` — liveness + whether the RentCast key is configured (no auth).
+- `GET /enrich?address=...` — owner/tax enrichment. **Requires** `Authorization: Bearer $API_SHARED_SECRET`; spends one metered RentCast request.
 - `GET /listings?...` — on-market listings for the deal feed _(later)_.
 
 ## Notes

@@ -8,6 +8,7 @@
 import type { OwnerIntel } from "@/data/sample";
 
 const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+const API_TOKEN = process.env.EXPO_PUBLIC_API_TOKEN ?? "";
 
 export interface EnrichResponse extends OwnerIntel {
   address: string;
@@ -19,7 +20,9 @@ export function isApiConfigured(): boolean {
 
 export async function enrichByAddress(address: string): Promise<EnrichResponse> {
   if (!API_URL) throw new Error("Backend not configured — set EXPO_PUBLIC_API_URL to your VPS.");
-  const res = await fetch(`${API_URL}/enrich?address=${encodeURIComponent(address)}`);
+  const res = await fetch(`${API_URL}/enrich?address=${encodeURIComponent(address)}`, {
+    headers: API_TOKEN ? { authorization: `Bearer ${API_TOKEN}` } : {},
+  });
   const data = (await res.json().catch(() => null)) as (EnrichResponse & { error?: string }) | null;
   if (!res.ok || !data) throw new Error(data?.error ?? `Request failed (${res.status})`);
   return data;
