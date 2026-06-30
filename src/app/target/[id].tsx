@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { type ReactNode, useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 
 import { WORKED_EXAMPLE } from "@/calc/types";
 import {
@@ -21,9 +21,9 @@ import {
   Ui,
 } from "@/components/tactical";
 import { Tactical, hairline } from "@/constants/theme";
-import type { Lead } from "@/data/sample";
-import { getLeadById } from "@/db/leads-repo";
-import { heatColor } from "@/lib/tactical";
+import type { Lead, PipelineStatus } from "@/data/sample";
+import { getLeadById, saveLead } from "@/db/leads-repo";
+import { heatColor, statusColor } from "@/lib/tactical";
 import { useDealStore } from "@/store/deal";
 
 const RED = Tactical.status.red;
@@ -96,6 +96,12 @@ export default function TargetDossierScreen() {
   const owner = lead.owner;
   const c = heatColor(lead.heat);
 
+  const setStatus = async (s: PipelineStatus) => {
+    const updated = { ...lead, status: s };
+    setLead(updated);
+    await saveLead(updated);
+  };
+
   return (
     <ScreenShell>
       <TopBar>
@@ -156,6 +162,34 @@ export default function TargetDossierScreen() {
               </Ui>
             </View>
           ) : null}
+        </View>
+
+        {/* STATUS PIPELINE */}
+        <View style={{ gap: 8 }}>
+          <SectionLabel>STATUS</SectionLabel>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+            {(["NEW", "RECON", "CONTACT", "ENGAGED", "DEAD"] as PipelineStatus[]).map((s) => {
+              const active = lead.status === s;
+              const col = statusColor(s);
+              return (
+                <Pressable
+                  key={s}
+                  onPress={() => setStatus(s)}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: active ? col : hairline(0.16),
+                    backgroundColor: active ? "rgba(124,255,155,0.06)" : Tactical.bg.raised,
+                    paddingHorizontal: 9,
+                    paddingVertical: 5,
+                  }}
+                >
+                  <Ui size={8} weight="bold" spacing={1} color={active ? col : Tactical.text.muted}>
+                    {s}
+                  </Ui>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* INTEL // OWNER & TAX */}
