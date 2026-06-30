@@ -23,6 +23,8 @@ import {
   glowBox,
 } from "@/components/tactical";
 import { Tactical, hairline } from "@/constants/theme";
+import type { Lead } from "@/data/sample";
+import { saveLead } from "@/db/leads-repo";
 
 const AMBER = Tactical.status.amber;
 const TAGS = ["VACANT", "OVERGROWN", "ROOF DMG", "BOARDED", "FIRE DMG", "CODE VIOL", "FSBO", "HOARDER"];
@@ -60,6 +62,25 @@ export default function CaptureScreen() {
       else next.add(t);
       return next;
     });
+
+  const confirm = async () => {
+    const tags = [...selected];
+    const lead: Lead = {
+      id: `LEAD-${Date.now().toString(36).toUpperCase()}`,
+      address: "1428 ELM AVE",
+      city: "KANSAS CITY, MO 64127",
+      coords: { lat: 39.0991, lng: -94.5772 },
+      distanceMi: 0.1,
+      heat: "HOT",
+      motivationScore: 80,
+      status: "NEW",
+      distressTags: tags,
+      flags: tags.slice(0, 2).join(" · ") || "NEW TARGET",
+      photos: 0,
+    };
+    await saveLead(lead);
+    router.replace("/targets");
+  };
 
   return (
     <ScreenShell>
@@ -173,7 +194,7 @@ export default function CaptureScreen() {
 
       <ActionBar>
         <ChamferButton label="DISCARD" variant="outline" color={Tactical.text.muted} onPress={() => router.back()} full />
-        <ChamferButton label="CONFIRM TARGET ▸" onPress={() => router.replace("/targets")} full />
+        <ChamferButton label="CONFIRM TARGET ▸" onPress={confirm} full />
       </ActionBar>
     </ScreenShell>
   );
