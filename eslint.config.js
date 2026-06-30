@@ -9,6 +9,6 @@ const expoConfigs = Array.isArray(expo) ? expo : [expo];
 module.exports = [
   ...expoConfigs,
   {
-    ignores: ["dist/*", ".expo/*", "node_modules/*"],
+    ignores: ["dist/*", ".expo/*", "node_modules/*", "server/*"],
   },
 ];
