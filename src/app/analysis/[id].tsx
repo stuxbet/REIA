@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 import { computeBrrrr, evaluateBuyBox, type MetricStatus } from "@/calc/brrrr";
+import { type BrrrrInputs } from "@/calc/types";
 import {
   ActionBar,
   BackButton,
@@ -37,6 +38,28 @@ interface Tile {
   status: MetricStatus;
   formula: string;
   detail: string;
+}
+
+function SensCell({
+  res,
+  maxCashLeftIn,
+  minDSCR,
+}: {
+  res: { cashLeftInDeal: number; isFullyRecycled: boolean; dscr: number };
+  maxCashLeftIn: number;
+  minDSCR: number;
+}) {
+  const clOk = res.isFullyRecycled || res.cashLeftInDeal <= maxCashLeftIn;
+  return (
+    <View style={{ flex: 1, gap: 2 }}>
+      <Mono size={11} weight="med" color={clOk ? Tactical.green.primary : Tactical.status.amber}>
+        {res.isFullyRecycled ? "♾" : formatUSD(res.cashLeftInDeal)}
+      </Mono>
+      <Mono size={8} color={res.dscr >= minDSCR ? Tactical.text.muted : Tactical.status.red}>
+        DSCR {res.dscr.toFixed(2)}
+      </Mono>
+    </View>
+  );
 }
 
 export default function AnalysisScreen() {
@@ -120,6 +143,13 @@ export default function AnalysisScreen() {
       formula: "monthly rent ÷ ARV",
       detail: `${usd(inp.grossMonthlyRent)} ÷ ${usd(inp.arv)}`,
     },
+  ];
+
+  const stress = (mods: Partial<BrrrrInputs>) => computeBrrrr({ ...inp, ...mods });
+  const sensRows = [
+    { label: "ARV", shift: "±10%", lo: stress({ arv: inp.arv * 0.9 }), hi: stress({ arv: inp.arv * 1.1 }) },
+    { label: "RATE", shift: "±1pt", lo: stress({ refiRate: inp.refiRate - 0.01 }), hi: stress({ refiRate: inp.refiRate + 0.01 }) },
+    { label: "REHAB", shift: "±20%", lo: stress({ rehabBudget: inp.rehabBudget * 0.8 }), hi: stress({ rehabBudget: inp.rehabBudget * 1.2 }) },
   ];
 
   return (
@@ -206,6 +236,42 @@ export default function AnalysisScreen() {
               PURCHASE {formatUSD(inp.purchasePrice)}
             </Mono>
           </View>
+        </View>
+
+        {/* SENSITIVITY */}
+        <View style={{ gap: 6 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <SectionLabel>SENSITIVITY</SectionLabel>
+            <Mono size={8} color={Tactical.text.dim}>
+              CASH LEFT · DSCR @ ±SHIFT
+            </Mono>
+          </View>
+          <View style={{ flexDirection: "row" }}>
+            <View style={{ width: 72 }} />
+            <Ui size={7.5} weight="semi" spacing={1} color={Tactical.text.faint} style={{ flex: 1 }}>
+              DOWNSIDE
+            </Ui>
+            <Ui size={7.5} weight="semi" spacing={1} color={Tactical.text.faint} style={{ flex: 1 }}>
+              UPSIDE
+            </Ui>
+          </View>
+          {sensRows.map((row) => (
+            <View
+              key={row.label}
+              style={{ flexDirection: "row", alignItems: "center", paddingTop: 7, borderTopWidth: 1, borderTopColor: hairline(0.08) }}
+            >
+              <View style={{ width: 72 }}>
+                <Ui size={9} weight="bold" spacing={0.5} color={Tactical.text.secondary}>
+                  {row.label}
+                </Ui>
+                <Mono size={7.5} color={Tactical.text.faint}>
+                  {row.shift}
+                </Mono>
+              </View>
+              <SensCell res={row.lo} maxCashLeftIn={buyBox.maxCashLeftIn} minDSCR={buyBox.minDSCR} />
+              <SensCell res={row.hi} maxCashLeftIn={buyBox.maxCashLeftIn} minDSCR={buyBox.minDSCR} />
+            </View>
+          ))}
         </View>
       </ScrollView>
 
