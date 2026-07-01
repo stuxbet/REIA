@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
+import { PinMap } from "@/components/pin-map";
 import {
   ActionBar,
   Center,
@@ -114,6 +115,22 @@ export default function CaptureScreen() {
     if (!res.canceled && res.assets[0]) setPhotos((p) => [...p, res.assets[0].uri].slice(0, 4));
   };
 
+  // Manual pin adjust from the mini-map: move the pin, then re-geocode the address.
+  const adjustPin = async (c: { lat: number; lng: number }) => {
+    setCoords(c);
+    try {
+      const places = await Location.reverseGeocodeAsync({ latitude: c.lat, longitude: c.lng });
+      const p = places[0];
+      if (p) {
+        const line1 = [p.streetNumber, p.street ?? p.name].filter(Boolean).join(" ").trim().toUpperCase();
+        const city = [p.city, p.region, p.postalCode].filter(Boolean).join(", ").toUpperCase();
+        setAddr({ line1: line1 || "DROPPED PIN", city: city || "—" });
+      }
+    } catch {
+      // keep the prior address if reverse-geocode fails
+    }
+  };
+
   const confirm = async () => {
     const tags = [...selected];
     const lead: Lead = {
@@ -158,25 +175,35 @@ export default function CaptureScreen() {
       </TopBar>
 
       <ScrollView contentContainerStyle={{ padding: 14, gap: 16 }} showsVerticalScrollIndicator={false}>
-        {/* PIN STRIP */}
+        {/* PIN STRIP — real locator map (tap the map or drag the pin to adjust) */}
         <View
           style={{
-            height: 96,
+            height: 116,
             backgroundColor: Tactical.bg.deep,
             borderWidth: 1,
             borderColor: hairline(0.12),
             overflow: "hidden",
+            position: "relative",
           }}
         >
-          <GridOverlay cell={20} color="rgba(124,255,155,0.05)" />
-          <Center>
-            <PingRing color={AMBER} size={46} />
-            <View style={[{ width: 11, height: 11, borderRadius: 6, backgroundColor: AMBER }, glowBox(AMBER, 8, 0.9)]} />
-          </Center>
-          <View style={{ position: "absolute", bottom: 8, left: 10, flexDirection: "row", alignItems: "center", gap: 5 }}>
+          {locating ? (
+            <>
+              <GridOverlay cell={20} color="rgba(124,255,155,0.05)" />
+              <Center>
+                <PingRing color={AMBER} size={46} />
+                <View style={[{ width: 11, height: 11, borderRadius: 6, backgroundColor: AMBER }, glowBox(AMBER, 8, 0.9)]} />
+              </Center>
+            </>
+          ) : (
+            <PinMap coords={coords} onChange={adjustPin} />
+          )}
+          <View
+            pointerEvents="none"
+            style={{ position: "absolute", top: 8, left: 10, flexDirection: "row", alignItems: "center", gap: 5 }}
+          >
             <View style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: AMBER }, glowBox(AMBER, 6, 0.8)]} />
             <Mono size={8} color={AMBER}>
-              {coords ? `PIN LOCKED · ${fmtCoord(coords.lat, coords.lng)}` : locating ? "ACQUIRING GPS…" : "PIN · MANUAL ENTRY"}
+              {coords ? `PIN LOCKED · ${fmtCoord(coords.lat, coords.lng)}` : locating ? "ACQUIRING GPS…" : "TAP MAP TO SET PIN"}
             </Mono>
           </View>
         </View>
