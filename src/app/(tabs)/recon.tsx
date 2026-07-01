@@ -1,18 +1,14 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { type DimensionValue, Pressable, View } from "react-native";
-import Svg, { Circle, Ellipse, Line } from "react-native-svg";
+import { Pressable, View } from "react-native";
+import Svg, { Circle, Line } from "react-native-svg";
 
+import { LeadMap } from "@/components/lead-map";
 import {
   BlinkDot,
-  Center,
   ChamferButton,
-  CornerBrackets,
-  GridOverlay,
   IconButton,
   Mono,
-  PingRing,
-  RadarSweep,
   ScreenHeader,
   ScreenShell,
   StatusDot,
@@ -25,14 +21,6 @@ import { listLeads, seedLeadsIfEmpty } from "@/db/leads-repo";
 import { heatColor } from "@/lib/tactical";
 
 const GREEN = Tactical.green.primary;
-
-const PINS: { top: DimensionValue; left: DimensionValue; heat: "HOT" | "WARM" | "COLD"; absentee?: boolean }[] = [
-  { top: "28%", left: "26%", heat: "WARM" },
-  { top: "57%", left: "63%", heat: "HOT", absentee: true },
-  { top: "40%", left: "80%", heat: "COLD" },
-  { top: "72%", left: "34%", heat: "WARM" },
-  { top: "20%", left: "62%", heat: "HOT" },
-];
 
 function HudIcon({ name, color = GREEN }: { name: "layers" | "filter" | "crosshair"; color?: string }) {
   if (name === "layers")
@@ -62,33 +50,6 @@ function HudIcon({ name, color = GREEN }: { name: "layers" | "filter" | "crossha
       <Line x1="0" y1="8" x2="3.5" y2="8" stroke={color} strokeWidth="1.3" />
       <Line x1="12.5" y1="8" x2="16" y2="8" stroke={color} strokeWidth="1.3" />
     </Svg>
-  );
-}
-
-function Pin({ heat, absentee }: { heat: "HOT" | "WARM" | "COLD"; absentee?: boolean }) {
-  const c = heatColor(heat);
-  return (
-    <View style={{ alignItems: "center" }}>
-      {absentee ? (
-        <View style={{ marginBottom: 4, backgroundColor: "rgba(255,90,82,0.16)", paddingHorizontal: 4, paddingVertical: 1 }}>
-          <Mono size={7} weight="bold" color={Tactical.status.redLight} spacing={0.5}>
-            $$ ABSENTEE
-          </Mono>
-        </View>
-      ) : null}
-      <View
-        style={{
-          width: 13,
-          height: 13,
-          backgroundColor: c,
-          transform: [{ rotate: "45deg" }],
-          shadowColor: c,
-          shadowOffset: { width: 0, height: 0 },
-          shadowRadius: 8,
-          shadowOpacity: 0.9,
-        }}
-      />
-    </View>
   );
 }
 
@@ -179,59 +140,8 @@ export default function ReconScreen() {
         </View>
       </TopBar>
 
-      {/* MAP CANVAS */}
-      <View style={{ flex: 1, backgroundColor: Tactical.bg.deep, position: "relative", overflow: "hidden" }}>
-        <GridOverlay cell={34} color="rgba(124,255,155,0.05)" />
-        <RadarSweep color={GREEN} />
-        <Svg style={{ position: "absolute", width: "100%", height: "100%" }} pointerEvents="none">
-          <Line x1="-5%" y1="38%" x2="105%" y2="52%" stroke="rgba(124,255,155,0.11)" strokeWidth="2" />
-          <Line x1="20%" y1="-5%" x2="70%" y2="105%" stroke="rgba(124,255,155,0.09)" strokeWidth="2" />
-          <Line x1="105%" y1="22%" x2="10%" y2="95%" stroke="rgba(124,255,155,0.08)" strokeWidth="1.5" />
-          <Ellipse cx="50%" cy="50%" rx="33%" ry="24%" stroke="rgba(124,255,155,0.07)" strokeWidth="1" fill="none" />
-        </Svg>
-
-        {/* overlay readouts */}
-        <View style={{ position: "absolute", top: 10, left: 12 }}>
-          <Mono size={9} color={Tactical.text.secondary}>
-            TARGETS // 14
-          </Mono>
-          <Mono size={9} color={Tactical.status.red} style={{ marginTop: 2 }}>
-            HOT // 03
-          </Mono>
-        </View>
-        <View style={{ position: "absolute", top: 10, right: 14 }}>
-          <Ui size={11} weight="bold" color={GREEN}>
-            N ↑
-          </Ui>
-        </View>
-
-        {/* pins */}
-        {PINS.map((p, i) => (
-          <View key={i} style={{ position: "absolute", top: p.top, left: p.left }}>
-            <Pin heat={p.heat} absentee={p.absentee} />
-          </View>
-        ))}
-
-        {/* user reticle */}
-        <Center>
-          <PingRing color={GREEN} size={96} />
-          <View style={{ position: "absolute", width: 52, height: 52, borderRadius: 26, borderWidth: 1, borderColor: hairline(0.35) }} />
-          <View style={{ position: "absolute", width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: GREEN }} />
-          <View style={{ position: "absolute", width: 44, height: 1, backgroundColor: hairline(0.4) }} />
-          <View style={{ position: "absolute", width: 1, height: 44, backgroundColor: hairline(0.4) }} />
-          <StatusDot color={GREEN} size={7} />
-        </Center>
-
-        <CornerBrackets color={GREEN} size={16} inset={8} />
-
-        {/* scale bar */}
-        <View style={{ position: "absolute", bottom: 10, left: 12, flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <View style={{ width: 30, height: 1, backgroundColor: hairline(0.4) }} />
-          <Mono size={8} color={Tactical.text.faint}>
-            500 FT
-          </Mono>
-        </View>
-      </View>
+      {/* MAP CANVAS — real Apple map with live lead pins */}
+      <LeadMap leads={leads} onPressLead={(lead) => router.push(`/target/${lead.id}`)} />
 
       {/* BOTTOM SHEET */}
       <View
